@@ -11,13 +11,15 @@ import { Board, columns } from '../constants/board'
 // Create an array of x null elements
 export const range = (limit = 8): null[] => Array(limit).fill(null)
 
-// Identify column and index in a move
+// Identify column in a move string
 export const getMoveCol = (move: string) => {
     const col = move.match(/[a-z]/)
 
     if (!col) throw new Error(`Invalid move, no column match!`)
     return col[0]
 }
+
+// Identify index in a move string
 export const getMoveIdx = (move: string) => {
     const idx = move.match(/\d/)
 
@@ -70,17 +72,16 @@ export const captureMoves = (
     return cm as string[]
 }
 
+// Deep copy an array/object
 export const deepCopy = <T>(obj: T): T => {
     if (obj === null || typeof obj !== 'object') {
-        return obj as T // Type assertion for primitive types and null
+        return obj as T
     }
 
     if (Array.isArray(obj)) {
-        // If the object is an array, create a new array and copy each element
         return obj.map(deepCopy) as T
     }
 
-    // If the object is a non-array object, create a new object and copy each property
     const copy = {} as T
     for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -196,15 +197,25 @@ export const exposedKing = (board: Board, player: boolean) => {
         // King safe moves
         const king = board[col][idx] as ChessPieceType
         const kingMoves = king.moves(col, idx)
-        const safeMoves = kingMoves.filter(
-            (move) =>
-                !isExposed(
-                    board,
-                    { col: col, idx: idx, piece: king },
-                    { col: getMoveCol(move), idx: getMoveIdx(move) },
-                    player
+        const safeMoves = kingMoves
+            .filter(
+                (move) =>
+                    !isExposed(
+                        board,
+                        { col: col, idx: idx, piece: king },
+                        { col: getMoveCol(move), idx: getMoveIdx(move) },
+                        player
+                    )
+            )
+            .filter((move) => {
+                const movePosition = board[getMoveCol(move)][getMoveIdx(move)]
+
+                return (
+                    ('player' in movePosition &&
+                        movePosition.player !== player) ||
+                    !('player' in movePosition)
                 )
-        )
+            })
 
         // Return necessary data
         if (captures.length)

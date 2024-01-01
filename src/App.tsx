@@ -9,7 +9,13 @@ import {
     getMoveIdx,
     isExposed,
 } from './functions/utils'
-import { ChessPieceType, King } from './classes/pieces'
+import { ChessPieceType, King, PieceCoords } from './classes/pieces'
+import {
+    availableMoveStyle,
+    exposedKingStyle,
+    exposedPieceStyle,
+    innerAvailableMoveStyle,
+} from './constants/styles'
 
 const playerAI = new PlayerAI()
 
@@ -33,9 +39,11 @@ export default function PvAI() {
     const [validMoves, setValidMoves] = useState([] as string[])
     // State that determines if a king is exposed to an enemy capture move
     const [exposed, setExposed] = useState(
-        false as
-            | false
-            | { king: King; captures: SelectedPiece[]; safes: string[] }
+        null as null | {
+            king: King
+            captures: SelectedPiece[]
+            safes: string[]
+        }
     )
     // Player king ref
     const playerKingRef = useRef(null as null | HTMLDivElement)
@@ -55,7 +63,7 @@ export default function PvAI() {
                 setValidMoves([])
 
                 setSelected((prevSelected) => {
-                    if (prevSelected?.ele) {
+                    if (prevSelected !== null) {
                         prevSelected.ele.style.border = ''
                         prevSelected.ele.style.backgroundColor = ''
                     }
@@ -187,7 +195,7 @@ export default function PvAI() {
             setValidMoves([])
             setSelected(null)
             setTurn(false)
-            setExposed(false)
+            setExposed(null)
         }
     }
 
@@ -206,7 +214,7 @@ export default function PvAI() {
             const ek = exposedKing(board, true)
 
             if (ek) setExposed(ek)
-            else setExposed(false)
+            else setExposed(null)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
@@ -215,37 +223,11 @@ export default function PvAI() {
     useEffect(() => {
         if (exposed) if (!exposed.safes.length) setWinner(!exposed.king.player)
     }, [exposed])
-    useEffect(() => {
-        const playerKing = (() => {
-            for (const column of columns) {
-                for (const cell of board[column]) {
-                    if (cell instanceof King && cell.id && cell.player) {
-                        return true
-                    }
-                }
-            }
-            return false
-        })()
 
-        const AIKing = (() => {
-            for (const column of columns) {
-                for (const cell of board[column]) {
-                    if (cell instanceof King && cell.id && !cell.player) {
-                        return true
-                    }
-                }
-            }
-            return false
-        })()
-
-        if (!playerKing) setWinner(false)
-        if (!AIKing) setWinner(true)
-    }, [board])
-
-    // Auto select the exposed king
+    // Auto select the player exposed king
     useEffect(() => {
         if (turn && exposed && exposed.king.player) {
-            const kingPosition = (() => {
+            const kingPosition: PieceCoords | null = (() => {
                 for (const column of columns) {
                     for (const cell of board[column]) {
                         if (cell instanceof King && cell.id && cell.player) {
@@ -256,7 +238,8 @@ export default function PvAI() {
                         }
                     }
                 }
-                return false
+
+                return null
             })()
 
             if (kingPosition) {
@@ -266,7 +249,7 @@ export default function PvAI() {
 
                 if (!selected) {
                     setSelected((prevSelected) => {
-                        if (prevSelected?.ele) {
+                        if (prevSelected !== null) {
                             prevSelected.ele.style.border = ''
                             prevSelected.ele.style.backgroundColor = ''
                         }
@@ -294,6 +277,13 @@ export default function PvAI() {
         else if (winner === false) console.log('AI wins!')
     }, [winner])
 
+    useEffect(() => {
+        if (selected?.piece instanceof King && selected.piece.player) {
+            console.log(validMoves)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [validMoves])
+
     return (
         <div className={style.wrapper}>
             <div className={style.board}>
@@ -313,7 +303,9 @@ export default function PvAI() {
                                 }
                                 style={{ position: 'relative' }}
                                 ref={
-                                    cell instanceof King ? playerKingRef : null
+                                    cell instanceof King && cell.player
+                                        ? playerKingRef
+                                        : null
                                 }
                             >
                                 <div
@@ -321,60 +313,18 @@ export default function PvAI() {
                                         exposed &&
                                         cell instanceof King &&
                                         cell.player
-                                            ? {
-                                                  position: 'absolute',
-                                                  display: 'block',
-                                                  width: '60%',
-                                                  height: '60%',
-                                                  backgroundColor:
-                                                      'var(--green)',
-                                                  border: '1px solid var(--gray)',
-                                                  borderRadius: '2px',
-                                                  transform: 'rotateZ(45deg)',
-                                                  zIndex: '5',
-                                              }
+                                            ? exposedKingStyle
                                             : validMoves.includes(col + idx)
-                                              ? {
-                                                    position: 'absolute',
-                                                    display: 'block',
-                                                    width:
-                                                        'id' in cell
-                                                            ? '50%'
-                                                            : '0.5rem',
-                                                    height:
-                                                        'id' in cell
-                                                            ? '50%'
-                                                            : '0.5rem',
-                                                    backgroundColor:
-                                                        'transparent',
-                                                    border:
-                                                        'id' in cell
-                                                            ? '3px solid var(--green)'
-                                                            : '2px solid var(--gray)',
-                                                    borderRadius:
-                                                        'id' in cell
-                                                            ? '2px'
-                                                            : '1px',
-                                                    outline:
-                                                        'id' in cell
-                                                            ? '1px solid var(--gray)'
-                                                            : 'none',
-                                                    transform: 'rotateZ(45deg)',
-                                                    zIndex: '5',
-                                                }
+                                              ? 'id' in cell
+                                                  ? exposedPieceStyle
+                                                  : availableMoveStyle
                                               : { display: 'none' }
                                     }
                                 >
                                     <div
                                         style={
                                             'id' in cell
-                                                ? {
-                                                      display: 'block',
-                                                      height: '100%',
-                                                      width: '100%',
-                                                      border: '1px solid var(--gray)',
-                                                      background: 'transparent',
-                                                  }
+                                                ? innerAvailableMoveStyle
                                                 : { display: 'none' }
                                         }
                                     />
