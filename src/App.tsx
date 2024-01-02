@@ -20,6 +20,7 @@ import {
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
+    // const [waiting, setWaiting] = useState(false)
     // State that determines if player (true) or AI (false) won the game, otherwise it's set to "null"
     const [winner, setWinner] = useState(null as null | boolean)
     // State that represents the current board state, initially set to "initialBoard"
@@ -40,7 +41,7 @@ export default function PvAI() {
     // State that determines if a king is exposed to an enemy capture move
     const [exposed, setExposed] = useState(
         null as null | {
-            king: King
+            king: SelectedPiece
             captures: SelectedPiece[]
             safes: string[]
         }
@@ -57,7 +58,11 @@ export default function PvAI() {
     ) => {
         const nextPosition = board[col][idx]
         // Standard player turn
-        if (turn && winner === null && !exposed) {
+        if (
+            turn &&
+            winner === null &&
+            (!exposed || !exposed.king.piece.player)
+        ) {
             // Standard player piece selection
             if ('player' in piece && piece.player) {
                 setValidMoves([])
@@ -178,7 +183,7 @@ export default function PvAI() {
             selected &&
             winner === null &&
             exposed &&
-            exposed.king.player &&
+            exposed.king.piece.player &&
             exposed.safes.length &&
             ('id' in nextPosition ? nextPosition.player !== true : true) &&
             validMoves.includes(col + idx)
@@ -199,34 +204,55 @@ export default function PvAI() {
         }
     }
 
-    // Execute the AI turn
-    useEffect(() => {
-        if (!turn && !selected) {
+    const executeAI = (
+        safe: boolean,
+        exposed: {
+            king: SelectedPiece
+            captures: SelectedPiece[]
+            safes: string[]
+        } | null
+    ) => {
+        if (!turn && !selected && winner === null) {
             setTimeout(() => {
-                playerAI.randomAction(board, setBoard, setSelected, setTurn)
+                playerAI.randomAction(
+                    safe,
+                    board,
+                    exposed,
+                    setBoard,
+                    setSelected,
+                    setTurn
+                )
             }, 150)
         }
-    }, [turn, board, selected])
+    }
 
-    // Detect player exposed king
+    // Detect exposed king
     useEffect(() => {
-        if (turn) {
-            const ek = exposedKing(board, true)
+        const ekPlayer = exposedKing(board, true)
+        const ekAi = exposedKing(board, false)
 
-            if (ek) setExposed(ek)
-            else setExposed(null)
+        if (ekPlayer) {
+            setExposed(ekPlayer)
+            executeAI(false, ekPlayer)
+        } else if (ekAi) {
+            setExposed(ekAi)
+            executeAI(true, ekAi)
+        } else {
+            setExposed(null)
+            executeAI(false, ekPlayer)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
 
     // Check if there's a winner
     useEffect(() => {
-        if (exposed) if (!exposed.safes.length) setWinner(!exposed.king.player)
+        if (exposed)
+            if (!exposed.safes.length) setWinner(!exposed.king.piece.player)
     }, [exposed])
 
     // Auto select the player exposed king
     useEffect(() => {
-        if (turn && exposed && exposed.king.player) {
+        if (turn && exposed && exposed.king.piece.player) {
             const kingPosition: PieceCoords | null = (() => {
                 for (const column of columns) {
                     for (const cell of board[column]) {
@@ -277,12 +303,9 @@ export default function PvAI() {
         else if (winner === false) console.log('AI wins!')
     }, [winner])
 
-    useEffect(() => {
-        if (selected?.piece instanceof King && selected.piece.player) {
-            console.log(validMoves)
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [validMoves])
+    // useEffect(() => console.log('Turn: ' + turn), [turn])
+    // useEffect(() => console.log('Exposed: ' + exposed?.king), [exposed])
+    // useEffect(() => console.log(selected), [selected])
 
     return (
         <div className={style.wrapper}>
@@ -311,6 +334,7 @@ export default function PvAI() {
                                 <div
                                     style={
                                         exposed &&
+                                        exposed.king.piece.player &&
                                         cell instanceof King &&
                                         cell.player
                                             ? exposedKingStyle

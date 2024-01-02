@@ -189,7 +189,13 @@ export class PlayerAI {
 
     // Perform a random action (move)
     randomAction = (
+        safe: boolean,
         board: Board,
+        exposed: null | {
+            king: SelectedPiece
+            captures: SelectedPiece[]
+            safes: string[]
+        },
         setBoard: React.Dispatch<React.SetStateAction<Board>>,
         setSelected: React.Dispatch<
             React.SetStateAction<{
@@ -220,7 +226,86 @@ export class PlayerAI {
         // List of blacklisted pieces IDs (pieces already checked by the algorithm)
         const blacklist: number[] = []
 
-        // Main function
+        // Safe move action
+        const safeMoveAction = () => {
+            if (exposed) {
+                const selected = exposed.king
+                const safeMoves = exposed.safes.sort((a, b) => {
+                    const [colA, idxA] = [getMoveCol(a), getMoveIdx(a)]
+                    const [colB, idxB] = [getMoveCol(b), getMoveIdx(b)]
+
+                    const positionA = board[colA][idxA] as ChessPieceType
+                    const positionB = board[colB][idxB] as ChessPieceType
+
+                    if (positionA.value > positionB.value) return -1
+                    else if (positionA.value < positionB.value) return 1
+                    return 0
+                })
+
+                if (safeMoves.length) {
+                    for (const move of safeMoves) {
+                        const col = getMoveCol(move)
+                        const idx = getMoveIdx(move)
+
+                        const defPredict = this.#defPredict(
+                            board,
+                            col,
+                            idx,
+                            selected
+                        ).sort(
+                            (a, b) => a.from.piece.value - b.from.piece.value
+                        )
+
+                        const ofPredict = defPredict.length
+                            ? this.#ofPredict(
+                                  board,
+                                  col,
+                                  idx,
+                                  selected,
+                                  defPredict[0].from
+                              )
+                            : []
+
+                        ranking.push({
+                            selected,
+                            move,
+                            score: defPredict.length
+                                ? -this.#getPredictScore(defPredict) +
+                                  this.#getPredictScore(ofPredict)
+                                : this.#qualify(
+                                      (
+                                          board[selected.col][
+                                              selected.idx
+                                          ] as ChessPieceType
+                                      ).value,
+                                      (board[col][idx] as ChessPieceType).value
+                                  ),
+                        })
+                    }
+                }
+
+                if (ranking.length) {
+                    ranking.sort((a, b) => b.score - a.score)
+
+                    const bestRanked = ranking[0]
+                    const col = getMoveCol(bestRanked.move)
+                    const idx = getMoveIdx(bestRanked.move)
+
+                    setBoard((prevBoard) => {
+                        prevBoard[bestRanked.selected.col][
+                            bestRanked.selected.idx
+                        ] = {}
+                        prevBoard[col][idx] = bestRanked.selected.piece
+                        return prevBoard
+                    })
+
+                    setSelected(null)
+                    setTurn(true)
+                }
+            }
+        }
+
+        // Move function
         const moveAction = () => {
             if (blacklist.length !== remaining) {
                 // 1. Choose a piece
@@ -368,27 +453,6 @@ export class PlayerAI {
                     const col = getMoveCol(bestRanked.move)
                     const idx = getMoveIdx(bestRanked.move)
 
-                    // const defPredict = this.#defPredict(
-                    //     board,
-                    //     col,
-                    //     idx,
-                    //     bestRanked.selected
-                    // ).sort((a, b) => a.from.piece.value - b.from.piece.value)
-
-                    // const ofPredict = defPredict.length
-                    //     ? this.#ofPredict(
-                    //           board,
-                    //           col,
-                    //           idx,
-                    //           bestRanked.selected,
-                    //           defPredict[0].from
-                    //       )
-                    //     : []
-
-                    // console.log('- - - - -')
-                    // console.log(defPredict)
-                    // console.log(ofPredict)
-
                     setBoard((prevBoard) => {
                         prevBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
@@ -403,7 +467,13 @@ export class PlayerAI {
             }
         }
 
-        // Invoke the main function
-        moveAction()
+        // Invoke the correct function
+        if (safe) {
+            console.log('SAFE MOVE')
+            safeMoveAction()
+        } else {
+            console.log('MOVE')
+            moveAction()
+        }
     }
 }

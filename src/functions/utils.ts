@@ -140,16 +140,19 @@ export const isExposed = (
     return false
 }
 
-export const exposedKing = (board: Board, player: boolean) => {
+export const exposedKing = (
+    board: Board,
+    player: boolean
+): null | {
+    king: SelectedPiece
+    captures: SelectedPiece[]
+    safes: string[]
+} => {
     // Locate the player king
     const kingPosition = (() => {
         for (const column of columns) {
             for (const cell of board[column]) {
-                if (
-                    cell instanceof King &&
-                    cell?.id &&
-                    cell?.player === player
-                ) {
+                if (cell instanceof King && cell.player === player) {
                     return { col: column, idx: board[column].indexOf(cell) }
                 }
             }
@@ -167,11 +170,7 @@ export const exposedKing = (board: Board, player: boolean) => {
         // Locate enemy knights
         for (const column of columns) {
             for (const cell of board[column]) {
-                if (
-                    cell instanceof Knight &&
-                    cell?.id &&
-                    cell?.player !== player
-                ) {
+                if (cell instanceof Knight && cell.player !== player) {
                     allAround.push(column + board[column].indexOf(cell))
                 }
             }
@@ -220,11 +219,11 @@ export const exposedKing = (board: Board, player: boolean) => {
         // Return necessary data
         if (captures.length)
             return {
-                king: king,
+                king: { col, idx, piece: king },
                 captures,
                 safes: safeMoves,
             }
     }
 
-    return false
+    return null
 }
