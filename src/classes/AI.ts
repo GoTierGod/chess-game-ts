@@ -35,28 +35,12 @@ export class PlayerAI {
         // Use a queen for convenience to identify all around enemies
         const queenAI = new Queen(false, 100)
         // All around enemy positions
-        const allAround = queenAI
-            .getCaptureMoves(fantasyBoard, col, idx, queenAI)
-            .filter(
-                (move) =>
-                    !queenAI?.isClogged(
-                        fantasyBoard,
-                        { col, idx },
-                        {
-                            col: getMoveCol(move),
-                            idx: getMoveIdx(move),
-                        }
-                    )
-            )
-
-        // Locate enemy knights
-        for (const column of columns) {
-            for (const cell of fantasyBoard[column]) {
-                if (cell instanceof Knight && cell?.id && cell?.player) {
-                    allAround.push(column + fantasyBoard[column].indexOf(cell))
-                }
-            }
-        }
+        const allAround = queenAI.getCaptureMoves(
+            fantasyBoard,
+            col,
+            idx,
+            queenAI
+        )
 
         // Enemies and their capture move
         const captures = []
@@ -106,31 +90,20 @@ export class PlayerAI {
         // Use a queen for convenience to identify all around allies
         const queenAI = new Queen(true, 100)
         // All around ally positions
-        const allAround = queenAI
-            .getCaptureMoves(fantasyBoard, col, idx, queenAI)
-            .filter(
-                (move) =>
-                    !queenAI?.isClogged(
-                        fantasyBoard,
-                        { col, idx },
-                        {
-                            col: getMoveCol(move),
-                            idx: getMoveIdx(move),
-                        }
-                    ) &&
-                    // Exlude the current ally piece
-                    move !== current.col + current.idx
-            )
+        const allAround = queenAI.getCaptureMoves(
+            fantasyBoard,
+            col,
+            idx,
+            queenAI
+        )
 
         // Locate ally knights
         for (const column of columns) {
             for (const cell of fantasyBoard[column]) {
                 if (
                     cell instanceof Knight &&
-                    cell?.id &&
-                    !cell?.player &&
-                    // Exlude the current ally piece if it is a knight
-                    cell?.id !== current.piece.id
+                    !cell.player &&
+                    cell.id !== current.piece.id
                 ) {
                     allAround.push(column + fantasyBoard[column].indexOf(cell))
                 }
@@ -380,13 +353,6 @@ export class PlayerAI {
                     //3. Identify capture moves
                     let capMoves = selected.piece
                         .getCaptureMoves(board, selected.col, selected.idx)
-                        .filter(
-                            (move) =>
-                                !selected.piece?.isClogged(board, selected, {
-                                    col: getMoveCol(move),
-                                    idx: getMoveIdx(move),
-                                })
-                        )
                         .sort((a, b) => {
                             const [colA, idxA] = [getMoveCol(a), getMoveIdx(a)]
                             const [colB, idxB] = [getMoveCol(b), getMoveIdx(b)]

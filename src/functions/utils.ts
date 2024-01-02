@@ -32,10 +32,11 @@ export const removeImpossibles = (moves: string[]) =>
     moves
         .filter((m) => Boolean(m))
         .filter((m) => {
-            const idx = m.match(/\d+/g)
+            const validMove = m.match(/[a-z]\d/i)
+            const idx = m.match(/\d+/)
 
-            if (!idx) return false
-            return 7 >= Number(idx[0])
+            if (!idx || (validMove && validMove[0] !== m)) return false
+            return 7 >= Number(idx[0]) && validMove && validMove[0] === m
         })
 
 // Identify and return capture moves for a specific piece
@@ -69,7 +70,7 @@ export const captureMoves = (
             )
         })
 
-    return cm as string[]
+    return removeImpossibles(cm) as string[]
 }
 
 // Deep copy an array/object

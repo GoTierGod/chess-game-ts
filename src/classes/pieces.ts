@@ -12,7 +12,12 @@ import blackKnight from '../assets/black/knight.svg'
 import blackRook from '../assets/black/rook.svg'
 
 import { around, diagonal, horizontal, vertical } from '../functions/moves'
-import { captureMoves, removeImpossibles } from '../functions/utils'
+import {
+    captureMoves,
+    getMoveCol,
+    getMoveIdx,
+    removeImpossibles,
+} from '../functions/utils'
 import {
     diagonalCollision,
     horizontalCollision,
@@ -55,17 +60,23 @@ export class Pawn extends ChessPiece {
         }
     }
 
-    moves = (col: string, idx: number) => {
-        return this.player
-            ? idx === 1
-                ? removeImpossibles([col + (idx + 1), col + (idx + 2)])
-                : removeImpossibles([col + (idx + 1)])
-            : idx === 6
-              ? removeImpossibles([col + (idx - 1), col + (idx - 2)])
-              : removeImpossibles([col + (idx - 1)])
+    moves = (col: string, idx: number): string[] => {
+        return removeImpossibles(
+            this.player
+                ? idx === 1
+                    ? [col + (idx + 1), col + (idx + 2)]
+                    : [col + (idx + 1)]
+                : idx === 6
+                  ? [col + (idx - 1), col + (idx - 2)]
+                  : [col + (idx - 1)]
+        )
     }
 
-    isClogged = (board: Board, current: PieceCoords, next: PieceCoords) => {
+    isClogged = (
+        board: Board,
+        current: PieceCoords,
+        next: PieceCoords
+    ): boolean => {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
@@ -79,7 +90,7 @@ export class Pawn extends ChessPiece {
                   'id' in board[next.col][next.idx + 1]
     }
 
-    getCaptureMoves = (board: Board, col: string, idx: number) => {
+    getCaptureMoves = (board: Board, col: string, idx: number): string[] => {
         const cm = []
         const colIdx = columns.indexOf(col)
 
@@ -106,7 +117,16 @@ export class Pawn extends ChessPiece {
                         : columns[colIdx + 1] + [idx - 1]
                 )
 
-        return cm
+        return removeImpossibles(
+            cm.filter(
+                (move) =>
+                    !this.isClogged(
+                        board,
+                        { col, idx },
+                        { col: getMoveCol(move), idx: getMoveIdx(move) }
+                    )
+            )
+        )
     }
 }
 
@@ -123,11 +143,15 @@ export class Queen extends ChessPiece {
         }
     }
 
-    moves = (col: string, idx: number) => {
+    moves = (col: string, idx: number): string[] => {
         return [...vertical(col), ...horizontal(idx), ...diagonal(col, idx)]
     }
 
-    isClogged = (board: Board, current: PieceCoords, next: PieceCoords) => {
+    isClogged = (
+        board: Board,
+        current: PieceCoords,
+        next: PieceCoords
+    ): boolean => {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
@@ -139,8 +163,12 @@ export class Queen extends ChessPiece {
         )
     }
 
-    getCaptureMoves = (board: Board, col: string, idx: number, piece = this) =>
-        captureMoves(board, col, idx, piece)
+    getCaptureMoves = (
+        board: Board,
+        col: string,
+        idx: number,
+        piece = this
+    ): string[] => captureMoves(board, col, idx, piece)
 }
 
 export class King extends ChessPiece {
@@ -156,11 +184,15 @@ export class King extends ChessPiece {
         }
     }
 
-    moves = (col: string, idx: number) => {
+    moves = (col: string, idx: number): string[] => {
         return around(col, idx)
     }
 
-    isClogged = (board: Board, _current: PieceCoords, next: PieceCoords) => {
+    isClogged = (
+        board: Board,
+        _current: PieceCoords,
+        next: PieceCoords
+    ): boolean => {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
@@ -172,7 +204,7 @@ export class King extends ChessPiece {
         col: string,
         idx: number,
         piece = this
-    ) => {
+    ): string[] => {
         return captureMoves(board, col, idx, piece)
     }
 }
@@ -190,11 +222,15 @@ export class Bishop extends ChessPiece {
         }
     }
 
-    moves = (col: string, idx: number) => {
+    moves = (col: string, idx: number): string[] => {
         return diagonal(col, idx)
     }
 
-    isClogged = (board: Board, current: PieceCoords, next: PieceCoords) => {
+    isClogged = (
+        board: Board,
+        current: PieceCoords,
+        next: PieceCoords
+    ): boolean => {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
@@ -209,7 +245,7 @@ export class Bishop extends ChessPiece {
         col: string,
         idx: number,
         piece = this
-    ) => {
+    ): string[] => {
         return captureMoves(board, col, idx, piece)
     }
 }
@@ -227,7 +263,7 @@ export class Knight extends ChessPiece {
         }
     }
 
-    moves = (col: string, idx: number) => {
+    moves = (col: string, idx: number): string[] => {
         return removeImpossibles([
             columns[columns.indexOf(col) + 1] + (idx + 2),
             columns[columns.indexOf(col) + 1] + (idx - 2),
@@ -240,7 +276,11 @@ export class Knight extends ChessPiece {
         ])
     }
 
-    isClogged = (board: Board, _current: PieceCoords, next: PieceCoords) => {
+    isClogged = (
+        board: Board,
+        _current: PieceCoords,
+        next: PieceCoords
+    ): boolean => {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
@@ -252,7 +292,7 @@ export class Knight extends ChessPiece {
         col: string,
         idx: number,
         piece = this
-    ) => {
+    ): string[] => {
         return captureMoves(board, col, idx, piece)
     }
 }
@@ -270,11 +310,15 @@ export class Rook extends ChessPiece {
         }
     }
 
-    moves = (col: string, idx: number) => {
+    moves = (col: string, idx: number): string[] => {
         return [...vertical(col), ...horizontal(idx)]
     }
 
-    isClogged = (board: Board, current: PieceCoords, next: PieceCoords) => {
+    isClogged = (
+        board: Board,
+        current: PieceCoords,
+        next: PieceCoords
+    ): boolean => {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
@@ -290,7 +334,7 @@ export class Rook extends ChessPiece {
         col: string,
         idx: number,
         piece = this
-    ) => {
+    ): string[] => {
         return captureMoves(board, col, idx, piece)
     }
 }
