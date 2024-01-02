@@ -1,6 +1,6 @@
 import { players, columns, Board } from '../constants/board'
-import { deepCopy, getMoveCol, getMoveIdx } from '../functions/utils'
-import { ChessPieceType, Knight, Queen } from './pieces'
+import { deepCopy, getMoveCol, getMoveIdx, isExposed } from '../functions/utils'
+import { ChessPieceType, King, Knight, Queen } from './pieces'
 
 export interface SelectedPiece {
     col: string
@@ -146,11 +146,30 @@ export class PlayerAI {
 
             // Identify capture moves for the ally in this position
             const piece = fantasyBoard[thisCol][thisIdx] as ChessPieceType
-            const captureMoves = piece.getCaptureMoves(
+            let captureMoves = piece.getCaptureMoves(
                 fantasyBoard,
                 thisCol,
                 thisIdx
             )
+
+            if (piece instanceof King) {
+                captureMoves = captureMoves.filter(
+                    (move) =>
+                        !isExposed(
+                            board,
+                            {
+                                col: thisCol,
+                                idx: thisIdx,
+                                piece: piece,
+                            },
+                            {
+                                col: getMoveCol(move),
+                                idx: getMoveIdx(move),
+                            },
+                            false
+                        )
+                )
+            }
 
             // If this ally can capture the AI piece
             // Add the current ally position and his capture move
@@ -333,7 +352,7 @@ export class PlayerAI {
 
                 if (selected) {
                     // 2. Identify valid standard moves
-                    const moves = selected.piece
+                    let moves = selected.piece
                         .moves(selected.col, selected.idx)
                         .filter(
                             (move) =>
@@ -343,8 +362,23 @@ export class PlayerAI {
                                 })
                         )
 
+                    if (selected.piece instanceof King) {
+                        moves = moves.filter(
+                            (move) =>
+                                !isExposed(
+                                    board,
+                                    selected,
+                                    {
+                                        col: getMoveCol(move),
+                                        idx: getMoveIdx(move),
+                                    },
+                                    false
+                                )
+                        )
+                    }
+
                     //3. Identify capture moves
-                    const capMoves = selected.piece
+                    let capMoves = selected.piece
                         .getCaptureMoves(board, selected.col, selected.idx)
                         .filter(
                             (move) =>
@@ -368,6 +402,21 @@ export class PlayerAI {
                             else if (positionA.value < positionB.value) return 1
                             return 0
                         })
+
+                    if (selected.piece instanceof King) {
+                        capMoves = capMoves.filter(
+                            (move) =>
+                                !isExposed(
+                                    board,
+                                    selected,
+                                    {
+                                        col: getMoveCol(move),
+                                        idx: getMoveIdx(move),
+                                    },
+                                    false
+                                )
+                        )
+                    }
 
                     // 4. Rank moves
                     // Capture moves
