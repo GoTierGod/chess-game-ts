@@ -132,7 +132,7 @@ export class Pawn extends ChessPiece {
 
 export class Queen extends ChessPiece {
     public name = 'Queen'
-    public value = 10
+    public value = 50
     public image: PieceImage
 
     constructor(player: boolean, id: number) {

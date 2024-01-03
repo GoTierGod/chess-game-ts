@@ -11,17 +11,160 @@ export interface SelectedPiece {
 interface Predict {
     from: SelectedPiece
     to: SelectedPiece
+    score: number
 }
 
 export class PlayerAI {
     pieces = players.black
+
+    // Defensive capture move prediction
+    // #defCapturePredict = (
+    //     board: Board,
+    //     col: string,
+    //     idx: number,
+    //     current: SelectedPiece
+    // ): Predict[] => {
+    //     const fantasyBoard = (() => {
+    //         const mirrorBoard = deepCopy(board)
+
+    //         mirrorBoard[current.col][current.idx] = {}
+    //         mirrorBoard[col][idx] = current.piece
+
+    //         return mirrorBoard
+    //     })()
+
+    //     // Use a queen for convenience to identify all around enemies
+    //     const queenAI = new Queen(false, 100)
+    //     // All around enemy positions
+    //     const allAround = queenAI.getCaptureMoves(
+    //         fantasyBoard,
+    //         col,
+    //         idx,
+    //         queenAI
+    //     )
+
+    //     // Enemies and their capture move
+    //     const captures = []
+    //     // Loop through enemy positions
+    //     for (const position of allAround) {
+    //         const thisCol = getMoveCol(position)
+    //         const thisIdx = getMoveIdx(position)
+
+    //         // Identify capture moves for the enemy in this position
+    //         const piece = fantasyBoard[thisCol][thisIdx] as ChessPieceType
+    //         const captureMoves = piece.getCaptureMoves(
+    //             fantasyBoard,
+    //             thisCol,
+    //             thisIdx
+    //         )
+
+    //         // If this enemy can capture the AI piece
+    //         // Add the current enemy position and his capture move
+    //         if (captureMoves.includes(col + idx))
+    //             captures.push({
+    //                 from: { col: thisCol, idx: thisIdx, piece: piece },
+    //                 to: { col, idx, piece: current.piece },
+    //             })
+    //     }
+
+    //     // Return enemies and their capture move
+    //     return captures
+    // }
+
+    // Ofensive capture move prediction
+    // #ofCapturePredict = (
+    //     board: Board,
+    //     col: string,
+    //     idx: number,
+    //     current: SelectedPiece,
+    //     enemy: SelectedPiece
+    // ): Predict[] => {
+    //     const fantasyBoard = (() => {
+    //         const mirrorBoard = deepCopy(board)
+
+    //         mirrorBoard[current.col][current.idx] = {}
+    //         mirrorBoard[col][idx] = current.piece
+
+    //         return mirrorBoard
+    //     })()
+
+    //     // Use a queen for convenience to identify all around allies
+    //     const queenAI = new Queen(true, 100)
+    //     // All around ally positions
+    //     const allAround = queenAI.getCaptureMoves(
+    //         fantasyBoard,
+    //         col,
+    //         idx,
+    //         queenAI
+    //     )
+
+    //     // Locate ally knights
+    //     for (const column of columns) {
+    //         for (const cell of fantasyBoard[column]) {
+    //             if (
+    //                 cell instanceof Knight &&
+    //                 !cell.player &&
+    //                 cell.id !== current.piece.id
+    //             ) {
+    //                 allAround.push(column + fantasyBoard[column].indexOf(cell))
+    //             }
+    //         }
+    //     }
+
+    //     // Allies and their capture move
+    //     const captures = []
+    //     // Loop through ally positions
+    //     for (const position of allAround) {
+    //         const thisCol = getMoveCol(position)
+    //         const thisIdx = getMoveIdx(position)
+
+    //         // Identify capture moves for the ally in this position
+    //         const piece = fantasyBoard[thisCol][thisIdx] as ChessPieceType
+    //         let captureMoves = piece.getCaptureMoves(
+    //             fantasyBoard,
+    //             thisCol,
+    //             thisIdx
+    //         )
+
+    //         if (piece instanceof King) {
+    //             captureMoves = captureMoves.filter(
+    //                 (move) =>
+    //                     !isExposed(
+    //                         board,
+    //                         {
+    //                             col: thisCol,
+    //                             idx: thisIdx,
+    //                             piece: piece,
+    //                         },
+    //                         {
+    //                             col: getMoveCol(move),
+    //                             idx: getMoveIdx(move),
+    //                         },
+    //                         false
+    //                     )
+    //             )
+    //         }
+
+    //         // If this ally can capture the AI piece
+    //         // Add the current ally position and his capture move
+    //         if (captureMoves.includes(col + idx))
+    //             captures.push({
+    //                 from: { col: thisCol, idx: thisIdx, piece: piece },
+    //                 to: { col, idx, piece: enemy.piece },
+    //             })
+    //     }
+
+    //     // Return allies and their capture move
+    //     return captures
+    // }
 
     // Defensive move prediction
     #defPredict = (
         board: Board,
         col: string,
         idx: number,
-        current: SelectedPiece
+        current: SelectedPiece,
+        eaten: null | ChessPieceType
     ): Predict[] => {
         const fantasyBoard = (() => {
             const mirrorBoard = deepCopy(board)
@@ -58,25 +201,37 @@ export class PlayerAI {
             )
 
             // If this enemy can capture the AI piece
-            // Add the current enemy position and his capture move
-            if (captureMoves.includes(col + idx))
+            if (captureMoves.includes(col + idx)) {
+                // Defensive exposing predict
+                const isExposing = this.#expPredict(fantasyBoard, col, idx, {
+                    col: thisCol,
+                    idx: thisIdx,
+                    piece,
+                })
+
+                const eatenValue = eaten?.value || 0
+
                 captures.push({
                     from: { col: thisCol, idx: thisIdx, piece: piece },
                     to: { col, idx, piece: current.piece },
+                    score: isExposing
+                        ? -1000 + eatenValue
+                        : eatenValue - current.piece.value,
                 })
+            }
         }
 
         // Return enemies and their capture move
         return captures
     }
 
-    // Ofensive move prediction
+    // Ofensive prediction
     #ofPredict = (
         board: Board,
         col: string,
         idx: number,
         current: SelectedPiece,
-        enemy: SelectedPiece
+        eater: ChessPieceType
     ): Predict[] => {
         const fantasyBoard = (() => {
             const mirrorBoard = deepCopy(board)
@@ -146,37 +301,118 @@ export class PlayerAI {
 
             // If this ally can capture the AI piece
             // Add the current ally position and his capture move
-            if (captureMoves.includes(col + idx))
+            if (captureMoves.includes(col + idx)) {
+                // Defensive exposing predict
+                const isExposing = this.#expPredict(
+                    fantasyBoard,
+                    col,
+                    idx,
+                    current
+                )
+
+                const eaterValue = eater?.value || 0
+
                 captures.push({
                     from: { col: thisCol, idx: thisIdx, piece: piece },
-                    to: { col, idx, piece: enemy.piece },
+                    to: { col, idx, piece: eater },
+                    score: isExposing
+                        ? 1000 - eaterValue
+                        : -eaterValue + current.piece.value,
                 })
+            }
         }
 
         // Return allies and their capture move
         return captures
     }
 
-    // Qualify a move by the ally and enemy values
-    #qualify = (a: number, b: number) => {
-        // return a > b ? a / b : b / a
-        return a * b
+    // Exposing predict
+    // Detect if a piece will have an exposing move after its next move
+    #expPredict = (
+        board: Board,
+        col: string,
+        idx: number,
+        current: SelectedPiece
+    ) => {
+        const fantasyBoard = (() => {
+            const mirrorBoard = deepCopy(board)
+
+            mirrorBoard[current.col][current.idx] = {}
+            mirrorBoard[col][idx] = current.piece
+
+            return mirrorBoard
+        })()
+
+        const captureMoves = current.piece.getCaptureMoves(
+            fantasyBoard,
+            col,
+            idx
+        )
+
+        for (const move of captureMoves) {
+            const thisCol = getMoveCol(move)
+            const thisIdx = getMoveIdx(move)
+
+            const thisPosition = fantasyBoard[thisCol][thisIdx]
+            if (
+                thisPosition instanceof King &&
+                thisPosition.player !== current.piece.player
+            )
+                return true
+        }
+
+        return false
     }
 
-    // Get prediction score
-    #getPredictScore = (arr: Predict[]) => {
-        return arr.length
-            ? arr
-                  .map(
-                      (predict) =>
-                          this.#qualify(
-                              predict.from.piece.value,
-                              predict.to.piece.value
-                          ),
-                      []
-                  )
-                  .reduce((a, b) => a + b, 0)
-            : 0
+    #depthPredict = (
+        board: Board,
+        col: string,
+        idx: number,
+        selected: SelectedPiece,
+        prevScore: null | number = null
+    ) => {
+        let score = prevScore || 0
+        const eaten = board[col][idx]
+
+        const defPredict = this.#defPredict(
+            board,
+            col,
+            idx,
+            selected,
+            'id' in eaten ? eaten : null
+        )
+            // From lower to higher
+            .sort((a, b) => a.from.piece.value - b.from.piece.value)
+
+        const ofPredict = defPredict.length
+            ? this.#ofPredict(
+                  board,
+                  col,
+                  idx,
+                  selected,
+                  defPredict[0].from.piece
+              )
+                  // From higher to lower
+                  .sort((a, b) => b.from.piece.value - a.from.piece.value)
+            : []
+
+        const scores = defPredict[0]?.score || 0 + ofPredict[0]?.score || 0
+        if (this.#expPredict(board, col, idx, selected)) score += 1000
+
+        if (scores === 0) score += 'value' in eaten ? eaten.value : -1
+        else score += scores
+
+        const lastPredict = ofPredict[0]
+        if (ofPredict[0])
+            this.#depthPredict(
+                board,
+                lastPredict.to.col,
+                lastPredict.to.idx,
+                lastPredict.from,
+                score
+            )
+
+        return score
     }
 
     // Perform a random action (move)
@@ -239,39 +475,15 @@ export class PlayerAI {
                         const col = getMoveCol(move)
                         const idx = getMoveIdx(move)
 
-                        const defPredict = this.#defPredict(
-                            board,
-                            col,
-                            idx,
-                            selected
-                        ).sort(
-                            (a, b) => a.from.piece.value - b.from.piece.value
-                        )
-
-                        const ofPredict = defPredict.length
-                            ? this.#ofPredict(
-                                  board,
-                                  col,
-                                  idx,
-                                  selected,
-                                  defPredict[0].from
-                              )
-                            : []
-
                         ranking.push({
                             selected,
                             move,
-                            score: defPredict.length
-                                ? -this.#getPredictScore(defPredict) +
-                                  this.#getPredictScore(ofPredict)
-                                : this.#qualify(
-                                      (
-                                          board[selected.col][
-                                              selected.idx
-                                          ] as ChessPieceType
-                                      ).value,
-                                      (board[col][idx] as ChessPieceType).value
-                                  ),
+                            score: this.#depthPredict(
+                                board,
+                                col,
+                                idx,
+                                selected
+                            ),
                         })
                     }
                 }
@@ -391,41 +603,15 @@ export class PlayerAI {
                             const col = getMoveCol(move)
                             const idx = getMoveIdx(move)
 
-                            const defPredict = this.#defPredict(
-                                board,
-                                col,
-                                idx,
-                                selected
-                            ).sort(
-                                (a, b) =>
-                                    a.from.piece.value - b.from.piece.value
-                            )
-
-                            const ofPredict = defPredict.length
-                                ? this.#ofPredict(
-                                      board,
-                                      col,
-                                      idx,
-                                      selected,
-                                      defPredict[0].from
-                                  )
-                                : []
-
                             ranking.push({
                                 selected,
                                 move,
-                                score: defPredict.length
-                                    ? -this.#getPredictScore(defPredict) +
-                                      this.#getPredictScore(ofPredict)
-                                    : this.#qualify(
-                                          (
-                                              board[selected.col][
-                                                  selected.idx
-                                              ] as ChessPieceType
-                                          ).value,
-                                          (board[col][idx] as ChessPieceType)
-                                              .value
-                                      ),
+                                score: this.#depthPredict(
+                                    board,
+                                    col,
+                                    idx,
+                                    selected
+                                ),
                             })
                         }
                     }
@@ -435,22 +621,15 @@ export class PlayerAI {
                             const col = getMoveCol(move)
                             const idx = getMoveIdx(move)
 
-                            const defPredict = this.#defPredict(
-                                board,
-                                col,
-                                idx,
-                                selected
-                            ).sort(
-                                (a, b) =>
-                                    a.from.piece.value - b.from.piece.value
-                            )
-
                             ranking.push({
                                 selected,
                                 move,
-                                score: defPredict.length
-                                    ? -this.#getPredictScore(defPredict)
-                                    : -1,
+                                score: this.#depthPredict(
+                                    board,
+                                    col,
+                                    idx,
+                                    selected
+                                ),
                             })
                         }
                     }
@@ -463,6 +642,8 @@ export class PlayerAI {
                 // 6. Make the move with the highest score
                 if (ranking.length) {
                     ranking.sort((a, b) => b.score - a.score)
+                    console.log(ranking[0].score)
+                    console.log(ranking)
 
                     const bestRanked = ranking[0]
                     const col = getMoveCol(bestRanked.move)
