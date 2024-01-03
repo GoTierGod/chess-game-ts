@@ -17,147 +17,6 @@ interface Predict {
 export class PlayerAI {
     pieces = players.black
 
-    // Defensive capture move prediction
-    // #defCapturePredict = (
-    //     board: Board,
-    //     col: string,
-    //     idx: number,
-    //     current: SelectedPiece
-    // ): Predict[] => {
-    //     const fantasyBoard = (() => {
-    //         const mirrorBoard = deepCopy(board)
-
-    //         mirrorBoard[current.col][current.idx] = {}
-    //         mirrorBoard[col][idx] = current.piece
-
-    //         return mirrorBoard
-    //     })()
-
-    //     // Use a queen for convenience to identify all around enemies
-    //     const queenAI = new Queen(false, 100)
-    //     // All around enemy positions
-    //     const allAround = queenAI.getCaptureMoves(
-    //         fantasyBoard,
-    //         col,
-    //         idx,
-    //         queenAI
-    //     )
-
-    //     // Enemies and their capture move
-    //     const captures = []
-    //     // Loop through enemy positions
-    //     for (const position of allAround) {
-    //         const thisCol = getMoveCol(position)
-    //         const thisIdx = getMoveIdx(position)
-
-    //         // Identify capture moves for the enemy in this position
-    //         const piece = fantasyBoard[thisCol][thisIdx] as ChessPieceType
-    //         const captureMoves = piece.getCaptureMoves(
-    //             fantasyBoard,
-    //             thisCol,
-    //             thisIdx
-    //         )
-
-    //         // If this enemy can capture the AI piece
-    //         // Add the current enemy position and his capture move
-    //         if (captureMoves.includes(col + idx))
-    //             captures.push({
-    //                 from: { col: thisCol, idx: thisIdx, piece: piece },
-    //                 to: { col, idx, piece: current.piece },
-    //             })
-    //     }
-
-    //     // Return enemies and their capture move
-    //     return captures
-    // }
-
-    // Ofensive capture move prediction
-    // #ofCapturePredict = (
-    //     board: Board,
-    //     col: string,
-    //     idx: number,
-    //     current: SelectedPiece,
-    //     enemy: SelectedPiece
-    // ): Predict[] => {
-    //     const fantasyBoard = (() => {
-    //         const mirrorBoard = deepCopy(board)
-
-    //         mirrorBoard[current.col][current.idx] = {}
-    //         mirrorBoard[col][idx] = current.piece
-
-    //         return mirrorBoard
-    //     })()
-
-    //     // Use a queen for convenience to identify all around allies
-    //     const queenAI = new Queen(true, 100)
-    //     // All around ally positions
-    //     const allAround = queenAI.getCaptureMoves(
-    //         fantasyBoard,
-    //         col,
-    //         idx,
-    //         queenAI
-    //     )
-
-    //     // Locate ally knights
-    //     for (const column of columns) {
-    //         for (const cell of fantasyBoard[column]) {
-    //             if (
-    //                 cell instanceof Knight &&
-    //                 !cell.player &&
-    //                 cell.id !== current.piece.id
-    //             ) {
-    //                 allAround.push(column + fantasyBoard[column].indexOf(cell))
-    //             }
-    //         }
-    //     }
-
-    //     // Allies and their capture move
-    //     const captures = []
-    //     // Loop through ally positions
-    //     for (const position of allAround) {
-    //         const thisCol = getMoveCol(position)
-    //         const thisIdx = getMoveIdx(position)
-
-    //         // Identify capture moves for the ally in this position
-    //         const piece = fantasyBoard[thisCol][thisIdx] as ChessPieceType
-    //         let captureMoves = piece.getCaptureMoves(
-    //             fantasyBoard,
-    //             thisCol,
-    //             thisIdx
-    //         )
-
-    //         if (piece instanceof King) {
-    //             captureMoves = captureMoves.filter(
-    //                 (move) =>
-    //                     !isExposed(
-    //                         board,
-    //                         {
-    //                             col: thisCol,
-    //                             idx: thisIdx,
-    //                             piece: piece,
-    //                         },
-    //                         {
-    //                             col: getMoveCol(move),
-    //                             idx: getMoveIdx(move),
-    //                         },
-    //                         false
-    //                     )
-    //             )
-    //         }
-
-    //         // If this ally can capture the AI piece
-    //         // Add the current ally position and his capture move
-    //         if (captureMoves.includes(col + idx))
-    //             captures.push({
-    //                 from: { col: thisCol, idx: thisIdx, piece: piece },
-    //                 to: { col, idx, piece: enemy.piece },
-    //             })
-    //     }
-
-    //     // Return allies and their capture move
-    //     return captures
-    // }
-
     // Defensive move prediction
     #defPredict = (
         board: Board,
@@ -214,9 +73,10 @@ export class PlayerAI {
                 captures.push({
                     from: { col: thisCol, idx: thisIdx, piece: piece },
                     to: { col, idx, piece: current.piece },
-                    score: isExposing
-                        ? -1000 + eatenValue
-                        : eatenValue - current.piece.value,
+                    score:
+                        isExposing.exposing && !isExposing.exposed
+                            ? -1000 + eatenValue
+                            : eatenValue - current.piece.value,
                 })
             }
         }
@@ -315,9 +175,10 @@ export class PlayerAI {
                 captures.push({
                     from: { col: thisCol, idx: thisIdx, piece: piece },
                     to: { col, idx, piece: eater },
-                    score: isExposing
-                        ? 1000 - eaterValue
-                        : -eaterValue + current.piece.value,
+                    score:
+                        isExposing.exposing && !isExposing.exposed
+                            ? 1000 - eaterValue
+                            : -eaterValue + current.piece.value,
                 })
             }
         }
@@ -333,7 +194,7 @@ export class PlayerAI {
         col: string,
         idx: number,
         current: SelectedPiece
-    ) => {
+    ): { exposing: boolean; exposed: boolean } => {
         const fantasyBoard = (() => {
             const mirrorBoard = deepCopy(board)
 
@@ -355,13 +216,33 @@ export class PlayerAI {
 
             const thisPosition = fantasyBoard[thisCol][thisIdx]
             if (
-                thisPosition instanceof King &&
-                thisPosition.player !== current.piece.player
-            )
-                return true
+                'player' &&
+                'name' in thisPosition &&
+                thisPosition.player !== current.piece.player &&
+                thisPosition.name === 'King'
+            ) {
+                const kingMoves = thisPosition.moves(thisCol, thisIdx).filter(
+                    (move) =>
+                        !isExposed(
+                            fantasyBoard,
+                            {
+                                col: thisCol,
+                                idx: thisIdx,
+                                piece: thisPosition,
+                            },
+                            { col: getMoveCol(move), idx: getMoveIdx(move) },
+                            thisPosition.player
+                        )
+                )
+
+                return {
+                    exposing: true,
+                    exposed: kingMoves.includes(col + idx),
+                }
+            }
         }
 
-        return false
+        return { exposing: false, exposed: false }
     }
 
     #depthPredict = (
@@ -397,7 +278,11 @@ export class PlayerAI {
             : []
 
         const scores = defPredict[0]?.score || 0 + ofPredict[0]?.score || 0
-        if (this.#expPredict(board, col, idx, selected)) score += 1000
+        const isExposing = this.#expPredict(board, col, idx, selected)
+        if (isExposing.exposing && !isExposing.exposed) {
+            score += 1000
+            console.log('Exposing! ' + isExposing)
+        }
 
         if (scores === 0) score += 'value' in eaten ? eaten.value : -1
         else score += scores
@@ -665,10 +550,8 @@ export class PlayerAI {
 
         // Invoke the correct function
         if (safe) {
-            console.log('SAFE MOVE')
             safeMoveAction()
         } else {
-            console.log('MOVE')
             moveAction()
         }
     }
