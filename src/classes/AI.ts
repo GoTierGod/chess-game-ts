@@ -279,10 +279,7 @@ export class PlayerAI {
 
         const scores = defPredict[0]?.score || 0 + ofPredict[0]?.score || 0
         const isExposing = this.#expPredict(board, col, idx, selected)
-        if (isExposing.exposing && !isExposing.exposed) {
-            score += 1000
-            console.log('Exposing! ' + isExposing)
-        }
+        if (isExposing.exposing && !isExposing.exposed) score += 1000
 
         if (scores === 0) score += 'value' in eaten ? eaten.value : -1
         else score += scores
@@ -318,7 +315,9 @@ export class PlayerAI {
                 piece: ChessPieceType
             } | null>
         >,
-        setTurn: React.Dispatch<React.SetStateAction<boolean>>
+        setTurn: React.Dispatch<React.SetStateAction<boolean>>,
+        setTie: React.Dispatch<React.SetStateAction<boolean>>,
+        winner: null | boolean
     ) => {
         // Remaining AI (enemy) pieces on the board
         const remaining = columns
@@ -527,8 +526,7 @@ export class PlayerAI {
                 // 6. Make the move with the highest score
                 if (ranking.length) {
                     ranking.sort((a, b) => b.score - a.score)
-                    console.log(ranking[0].score)
-                    console.log(ranking)
+                    // console.log(`Score: ${ranking[0].score}`)
 
                     const bestRanked = ranking[0]
                     const col = getMoveCol(bestRanked.move)
@@ -544,15 +542,12 @@ export class PlayerAI {
 
                     setSelected(null)
                     setTurn(true)
-                }
+                } else if (!ranking.length && winner !== null) setTie(true)
             }
         }
 
         // Invoke the correct function
-        if (safe) {
-            safeMoveAction()
-        } else {
-            moveAction()
-        }
+        if (safe) safeMoveAction()
+        else moveAction()
     }
 }

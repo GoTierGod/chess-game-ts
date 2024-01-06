@@ -20,9 +20,10 @@ import {
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
-    // const [waiting, setWaiting] = useState(false)
     // State that determines if player (true) or AI (false) won the game, otherwise it's set to "null"
     const [winner, setWinner] = useState(null as null | boolean)
+    // State that determines if there's a tie
+    const [tie, setTie] = useState(false)
     // State that represents the current board state, initially set to "initialBoard"
     const [board, setBoard] = useState(initialBoard as Board)
     // State that determines if is the player turn (true) or AI turn (false)
@@ -220,7 +221,9 @@ export default function PvAI() {
                     exposed,
                     setBoard,
                     setSelected,
-                    setTurn
+                    setTurn,
+                    setTie,
+                    winner
                 )
             }, 150)
         }
@@ -241,6 +244,48 @@ export default function PvAI() {
             setExposed(null)
             executeAI(false, ekPlayer)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [turn])
+
+    // Detect player tie
+    useEffect(() => {
+        let isTied = true
+
+        const playerPieces: SelectedPiece[] = []
+        for (const col of columns) {
+            for (let idx = 0; idx < col.length; idx++) {
+                const cell = board[col][idx]
+                if ('player' in cell && cell.player)
+                    playerPieces.push({ col, idx, piece: cell })
+            }
+        }
+
+        for (const piece of playerPieces) {
+            let moves = piece.piece
+                .moves(piece.col, piece.idx)
+                .filter(
+                    (move) =>
+                        !piece.piece.isClogged(
+                            board,
+                            { col: piece.col, idx: piece.idx },
+                            { col: getMoveCol(move), idx: getMoveIdx(move) }
+                        )
+                )
+
+            if (piece.piece.name === 'King')
+                moves = moves.filter((move) =>
+                    isExposed(
+                        board,
+                        piece,
+                        { col: getMoveCol(move), idx: getMoveIdx(move) },
+                        true
+                    )
+                )
+
+            if (moves.length) isTied = false
+        }
+
+        isTied && setTie(true)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
 
@@ -297,18 +342,29 @@ export default function PvAI() {
         }
     }, [board, turn, selected, exposed])
 
-    // Log winner
-    useEffect(() => {
-        if (winner === true) console.log(`Player wins!`)
-        else if (winner === false) console.log('AI wins!')
-    }, [winner])
+    const resetBoard = () => location.reload()
 
-    // useEffect(() => console.log('Turn: ' + turn), [turn])
-    // useEffect(() => console.log('Exposed: ' + exposed?.king), [exposed])
-    // useEffect(() => console.log(selected), [selected])
+    // Log winner
+    // useEffect(() => {
+    //     if (winner === true) console.log(`Player wins!`)
+    //     else if (winner === false) console.log('AI wins!')
+    // }, [winner])
 
     return (
         <div className={style.wrapper}>
+            <header className={style.header}>
+                <h2>
+                    {winner
+                        ? 'Player wins!'
+                        : winner === false
+                          ? 'AI wins!'
+                          : tie
+                            ? 'Player and Ai tied!'
+                            : turn
+                              ? 'Player turn'
+                              : 'AI turn'}
+                </h2>
+            </header>
             <div className={style.board}>
                 {Object.keys(board).map((col) => (
                     <div key={col} className={style.col}>
@@ -365,6 +421,17 @@ export default function PvAI() {
                     </div>
                 ))}
             </div>
+            <footer className={style.footer}>
+                {winner !== null || tie ? (
+                    <button onClick={resetBoard} className={style.tryAgain}>
+                        Try Again
+                    </button>
+                ) : (
+                    <button disabled className={style.placeholder}>
+                        Waiting results...
+                    </button>
+                )}
+            </footer>
         </div>
     )
 }
