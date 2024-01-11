@@ -133,3 +133,65 @@
         color 150ms,
         border-color 150ms;
 }
+
+.modal {
+    position: absolute;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-width: 100dvw;
+    min-height: 100dvh;
+
+    background: #242424a4;
+    backdrop-filter: blur(2px);
+
+    z-index: 100;
+}
+
+.coronation,
+.winning {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+
+    padding: 1rem;
+    width: fit-content;
+
+    background: var(--dark);
+
+    border-radius: 3px;
+}
+
+.winning {
+    align-items: center;
+}
+
+.winning img {
+    width: 4rem;
+    height: auto;
+}
+
+.coronation div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.modal button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: var(--gray);
+
+    border: 2px solid transparent;
+    border-radius: 3px;
+}
+
+.modal button:hover {
+    border: 2px solid var(--green);
+}

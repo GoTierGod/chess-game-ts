@@ -542,7 +542,7 @@ export class PlayerAI {
 
                     setSelected(null)
                     setTurn(true)
-                } else if (!ranking.length && winner !== null) setTie(true)
+                } else if (!ranking.length && winner === null) setTie(true)
             }
         }
 

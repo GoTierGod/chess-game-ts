@@ -9,7 +9,16 @@ import {
     getMoveIdx,
     isExposed,
 } from './functions/utils'
-import { ChessPieceType, King, PieceCoords } from './classes/pieces'
+import {
+    Bishop,
+    ChessPieceType,
+    King,
+    Knight,
+    Pawn,
+    PieceCoords,
+    Queen,
+    Rook,
+} from './classes/pieces'
 import {
     availableMoveStyle,
     exposedKingStyle,
@@ -17,9 +26,41 @@ import {
     innerAvailableMoveStyle,
 } from './constants/styles'
 
+import playerQueenImg from './assets/white/queen.svg'
+import playerBishopImg from './assets/white/bishop.svg'
+import playerKnightImg from './assets/white/knight.svg'
+import playerRookImg from './assets/white/rook.svg'
+import winnersCupImg from './assets/others/trophy-svgrepo-com.svg'
+import timesImg from './assets/others/times-svgrepo-com.svg'
+import handshakeImg from './assets/others/hand-shake-svgrepo-com.svg'
+
+const loserIcon = (
+    <div style={{ position: 'relative' }}>
+        <img
+            src={winnersCupImg}
+            alt="Winner's Cup"
+            style={{ position: 'relative', left: '-5%', top: '0' }}
+        />
+        <img
+            src={timesImg}
+            alt='Denegated'
+            style={{
+                position: 'absolute',
+                left: '15%',
+                top: '0',
+                height: '3rem',
+                width: 'Auto',
+            }}
+        />
+    </div>
+)
+const tiedIcon = <img src={handshakeImg} alt='Tied' />
+const winnerIcon = <img src={winnersCupImg} alt="Winner's Cup" />
+
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
+    const [coronation, setCoronation] = useState(null as null | SelectedPiece)
     // State that determines if player (true) or AI (false) won the game, otherwise it's set to "null"
     const [winner, setWinner] = useState(null as null | boolean)
     // State that determines if there's a tie
@@ -342,6 +383,66 @@ export default function PvAI() {
         }
     }, [board, turn, selected, exposed])
 
+    useEffect(() => {
+        for (const col of columns) {
+            for (let idx = 0; idx < board[col].length; idx++) {
+                const current = board[col][idx]
+                if (current instanceof Pawn && current.player && idx === 7) {
+                    setCoronation({ col, idx, piece: current })
+                    console.log('Player coronation')
+                }
+            }
+        }
+
+        for (const col of columns) {
+            for (let idx = 0; idx < board[col].length; idx++) {
+                const current = board[col][idx]
+                if (current instanceof Pawn && !current.player && idx === 0) {
+                    setCoronation({ col, idx, piece: current })
+                    console.log('AI coronation')
+                }
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [turn])
+
+    const toCrown = (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => {
+        if (coronation) {
+            let newPiece: null | ChessPieceType = null
+
+            switch (piece) {
+                case 'Queen':
+                    newPiece = new Queen(true, coronation.piece.id)
+                    break
+
+                case 'Bishop':
+                    newPiece = new Bishop(true, coronation.piece.id)
+                    break
+
+                case 'Knight':
+                    newPiece = new Knight(true, coronation.piece.id)
+                    break
+
+                case 'Rook':
+                    newPiece = new Rook(true, coronation.piece.id)
+                    break
+
+                default:
+                    break
+            }
+
+            if (newPiece) {
+                setBoard((prevBoard) => {
+                    prevBoard[coronation.col][coronation.idx] =
+                        newPiece as ChessPieceType
+                    return prevBoard
+                })
+            }
+        }
+
+        setCoronation(null)
+    }
+
     const resetBoard = () => location.reload()
 
     // Log winner
@@ -352,19 +453,6 @@ export default function PvAI() {
 
     return (
         <div className={style.wrapper}>
-            <header className={style.header}>
-                <h2>
-                    {winner
-                        ? 'Player wins!'
-                        : winner === false
-                          ? 'AI wins!'
-                          : tie
-                            ? 'Player and Ai tied!'
-                            : turn
-                              ? 'Player turn'
-                              : 'AI turn'}
-                </h2>
-            </header>
             <div className={style.board}>
                 {Object.keys(board).map((col) => (
                     <div key={col} className={style.col}>
@@ -421,17 +509,51 @@ export default function PvAI() {
                     </div>
                 ))}
             </div>
-            <footer className={style.footer}>
-                {winner !== null || tie ? (
-                    <button onClick={resetBoard} className={style.tryAgain}>
-                        Try Again
-                    </button>
-                ) : (
-                    <button disabled className={style.placeholder}>
-                        Waiting results...
-                    </button>
-                )}
-            </footer>
+            {(coronation || winner || tie) && (
+                <div className={style.modal}>
+                    {(winner || tie) && (
+                        <article className={style.winning}>
+                            <header>
+                                <h4>
+                                    {winner
+                                        ? 'Player Wins!'
+                                        : winner === false
+                                          ? 'AI wins!'
+                                          : tie && 'AI and Player tied!'}
+                                </h4>
+                            </header>
+                            {winner
+                                ? winnerIcon
+                                : winner === false
+                                  ? loserIcon
+                                  : tie && tiedIcon}
+                            <button onClick={resetBoard}>Try Again</button>
+                        </article>
+                    )}
+                    {coronation && (
+                        <article className={style.coronation}>
+                            <header>
+                                <h4>Coronation</h4>
+                                <p>Change your pawn for any of these</p>
+                            </header>
+                            <div>
+                                <button onClick={() => toCrown('Queen')}>
+                                    <img src={playerQueenImg} alt='Queen' />
+                                </button>
+                                <button onClick={() => toCrown('Bishop')}>
+                                    <img src={playerBishopImg} alt='Bishop' />
+                                </button>
+                                <button onClick={() => toCrown('Knight')}>
+                                    <img src={playerKnightImg} alt='Knight' />
+                                </button>
+                                <button onClick={() => toCrown('Rook')}>
+                                    <img src={playerRookImg} alt='Rook' />
+                                </button>
+                            </div>
+                        </article>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
