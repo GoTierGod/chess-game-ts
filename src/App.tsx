@@ -264,7 +264,9 @@ export default function PvAI() {
                     setSelected,
                     setTurn,
                     setTie,
-                    winner
+                    winner,
+                    coronation,
+                    toCrown
                 )
             }, 150)
         }
@@ -389,7 +391,6 @@ export default function PvAI() {
                 const current = board[col][idx]
                 if (current instanceof Pawn && current.player && idx === 7) {
                     setCoronation({ col, idx, piece: current })
-                    console.log('Player coronation')
                 }
             }
         }
@@ -399,7 +400,6 @@ export default function PvAI() {
                 const current = board[col][idx]
                 if (current instanceof Pawn && !current.player && idx === 0) {
                     setCoronation({ col, idx, piece: current })
-                    console.log('AI coronation')
                 }
             }
         }
@@ -407,24 +407,36 @@ export default function PvAI() {
     }, [turn])
 
     const toCrown = (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => {
-        if (coronation) {
+        if (coronation && piece) {
             let newPiece: null | ChessPieceType = null
 
             switch (piece) {
                 case 'Queen':
-                    newPiece = new Queen(true, coronation.piece.id)
+                    newPiece = new Queen(
+                        coronation.piece.player,
+                        coronation.piece.id
+                    )
                     break
 
                 case 'Bishop':
-                    newPiece = new Bishop(true, coronation.piece.id)
+                    newPiece = new Bishop(
+                        coronation.piece.player,
+                        coronation.piece.id
+                    )
                     break
 
                 case 'Knight':
-                    newPiece = new Knight(true, coronation.piece.id)
+                    newPiece = new Knight(
+                        coronation.piece.player,
+                        coronation.piece.id
+                    )
                     break
 
                 case 'Rook':
-                    newPiece = new Rook(true, coronation.piece.id)
+                    newPiece = new Rook(
+                        coronation.piece.player,
+                        coronation.piece.id
+                    )
                     break
 
                 default:
@@ -446,10 +458,10 @@ export default function PvAI() {
     const resetBoard = () => location.reload()
 
     // Log winner
-    // useEffect(() => {
-    //     if (winner === true) console.log(`Player wins!`)
-    //     else if (winner === false) console.log('AI wins!')
-    // }, [winner])
+    useEffect(() => {
+        if (winner === true) console.log(`Player wins!`)
+        else if (winner === false) console.log('AI wins!')
+    }, [winner])
 
     return (
         <div className={style.wrapper}>
@@ -509,9 +521,11 @@ export default function PvAI() {
                     </div>
                 ))}
             </div>
-            {(coronation || winner || tie) && (
+            {((coronation && coronation.piece.player) ||
+                winner !== null ||
+                tie) && (
                 <div className={style.modal}>
-                    {(winner || tie) && (
+                    {(winner !== null || tie) && (
                         <article className={style.winning}>
                             <header>
                                 <h4>
@@ -530,7 +544,7 @@ export default function PvAI() {
                             <button onClick={resetBoard}>Try Again</button>
                         </article>
                     )}
-                    {coronation && (
+                    {coronation && coronation.piece.player && (
                         <article className={style.coronation}>
                             <header>
                                 <h4>Coronation</h4>

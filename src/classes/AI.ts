@@ -317,7 +317,9 @@ export class PlayerAI {
         >,
         setTurn: React.Dispatch<React.SetStateAction<boolean>>,
         setTie: React.Dispatch<React.SetStateAction<boolean>>,
-        winner: null | boolean
+        winner: null | boolean,
+        coronation: SelectedPiece | null,
+        toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void
     ) => {
         // Remaining AI (enemy) pieces on the board
         const remaining = columns
@@ -549,5 +551,9 @@ export class PlayerAI {
         // Invoke the correct function
         if (safe) safeMoveAction()
         else moveAction()
+
+        if (coronation && !coronation.piece.player) {
+            toCrown('Queen')
+        }
     }
 }
