@@ -219,13 +219,16 @@ export default function PvAI() {
                     })
                 ) {
                     setBoard((prevBoard) => {
-                        const newBoard = deepCopy(board)
+                        prevBoard[selected.col][selected.idx] = {}
+                        prevBoard[col][idx] = selected.piece
+                        return prevBoard
+                        // const newBoard = deepCopy(board)
 
-                        newBoard[selected.col] = [...prevBoard[selected.col]]
-                        newBoard[selected.col][selected.idx] = {}
-                        newBoard[col][idx] = selected.piece
+                        // newBoard[selected.col] = [...prevBoard[selected.col]]
+                        // newBoard[selected.col][selected.idx] = {}
+                        // newBoard[col][idx] = selected.piece
 
-                        return newBoard
+                        // return newBoard
                     })
 
                     selected.ele.style.border = ''
@@ -251,13 +254,16 @@ export default function PvAI() {
             validMoves.includes(col + idx)
         ) {
             setBoard((prevBoard) => {
-                const newBoard = deepCopy(board)
+                prevBoard[selected.col][selected.idx] = {}
+                prevBoard[col][idx] = selected.piece
+                return prevBoard
+                // const newBoard = deepCopy(board)
 
-                newBoard[selected.col] = [...prevBoard[selected.col]]
-                newBoard[selected.col][selected.idx] = {}
-                newBoard[col][idx] = selected.piece
+                // newBoard[selected.col] = [...prevBoard[selected.col]]
+                // newBoard[selected.col][selected.idx] = {}
+                // newBoard[col][idx] = selected.piece
 
-                return newBoard
+                // return newBoard
             })
 
             selected.ele.style.border = ''
@@ -291,6 +297,7 @@ export default function PvAI() {
                     setTurnCount,
                     coronation,
                     toCrown,
+                    repetition,
                     addRepetition
                 )
             }, 150)
@@ -402,7 +409,6 @@ export default function PvAI() {
 
     // Detect tied for repetitions
     useEffect(() => {
-        console.log(repetition.player.moves)
         const counters: { [key: string]: number } = {}
 
         repetition.player.moves.forEach(
@@ -415,8 +421,6 @@ export default function PvAI() {
 
         for (const move of Object.keys(counters))
             if (counters[move] >= 3) {
-                console.log(move)
-                console.log(counters[move])
                 setTie(true)
             }
     }, [
@@ -531,7 +535,11 @@ export default function PvAI() {
     // Reset the game
     const resetBoard = () => location.reload()
 
-    // Log winner
+    // useEffect(() => {
+    //     console.log(exposed)
+    // }, [exposed])
+
+    // // Log winner
     // useEffect(() => {
     //     if (winner === true) console.log(`Player wins!`)
     //     else if (winner === false) console.log('AI wins!')

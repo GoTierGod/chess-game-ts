@@ -1,3 +1,4 @@
+import { repetition } from '../App'
 import { players, columns, Board } from '../constants/board'
 import { deepCopy, getMoveCol, getMoveIdx, isExposed } from '../functions/utils'
 import { ChessPieceType, King, Knight, Queen } from './pieces'
@@ -319,6 +320,7 @@ export class PlayerAI {
         setTurnCount: React.Dispatch<React.SetStateAction<number>>,
         coronation: SelectedPiece | null,
         toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void,
+        repetition: { ai: repetition; player: repetition },
         addRepetition: (pieceId: number, move: string, player: boolean) => void
     ) => {
         // Remaining AI (enemy) pieces on the board
@@ -376,8 +378,38 @@ export class PlayerAI {
 
                 if (ranking.length) {
                     ranking.sort((a, b) => b.score - a.score)
+                    const avoidRepeat: string[] = []
 
-                    const bestRanked = ranking[0]
+                    if (repetition.ai.id && repetition.ai.moves.length >= 2) {
+                        const counters: { [key: string]: number } = {}
+
+                        repetition.ai.moves.forEach(
+                            (move) =>
+                                (counters[move] = (counters[move] || 0) + 1)
+                        )
+
+                        for (const move of Object.keys(counters))
+                            if (counters[move] === 2) {
+                                avoidRepeat.push(move)
+                            }
+                    }
+
+                    const avoidRepetition = () => {
+                        if (
+                            ranking[0].selected.piece.id === repetition.ai.id &&
+                            avoidRepeat.includes(ranking[0].move)
+                        ) {
+                            if (ranking.length > 1) {
+                                ranking.shift()
+                                avoidRepetition()
+                            }
+                        }
+
+                        return ranking[0]
+                    }
+
+                    const bestRanked = avoidRepetition()
+
                     const col = getMoveCol(bestRanked.move)
                     const idx = getMoveIdx(bestRanked.move)
 
@@ -388,17 +420,22 @@ export class PlayerAI {
                     )
 
                     setBoard((prevBoard) => {
-                        const newBoard = deepCopy(board)
-
-                        newBoard[bestRanked.selected.col] = [
-                            ...prevBoard[bestRanked.selected.col],
-                        ]
-                        newBoard[bestRanked.selected.col][
+                        prevBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
                         ] = {}
-                        newBoard[col][idx] = bestRanked.selected.piece
+                        prevBoard[col][idx] = bestRanked.selected.piece
+                        return prevBoard
+                        // const newBoard = deepCopy(board)
 
-                        return newBoard
+                        // newBoard[bestRanked.selected.col] = [
+                        //     ...prevBoard[bestRanked.selected.col],
+                        // ]
+                        // newBoard[bestRanked.selected.col][
+                        //     bestRanked.selected.idx
+                        // ] = {}
+                        // newBoard[col][idx] = bestRanked.selected.piece
+
+                        // return newBoard
                     })
                 }
             }
@@ -538,8 +575,38 @@ export class PlayerAI {
                 if (ranking.length) {
                     ranking.sort((a, b) => b.score - a.score)
                     // console.log(`Score: ${ranking[0].score}`)
+                    const avoidRepeat: string[] = []
 
-                    const bestRanked = ranking[0]
+                    if (repetition.ai.id && repetition.ai.moves.length >= 2) {
+                        const counters: { [key: string]: number } = {}
+
+                        repetition.ai.moves.forEach(
+                            (move) =>
+                                (counters[move] = (counters[move] || 0) + 1)
+                        )
+
+                        for (const move of Object.keys(counters))
+                            if (counters[move] === 2) {
+                                avoidRepeat.push(move)
+                            }
+                    }
+
+                    const avoidRepetition = () => {
+                        if (
+                            ranking[0].selected.piece.id === repetition.ai.id &&
+                            avoidRepeat.includes(ranking[0].move)
+                        ) {
+                            if (ranking.length > 1) {
+                                ranking.shift()
+                                avoidRepetition()
+                            }
+                        }
+
+                        return ranking[0]
+                    }
+
+                    const bestRanked = avoidRepetition()
+
                     const col = getMoveCol(bestRanked.move)
                     const idx = getMoveIdx(bestRanked.move)
 
@@ -550,17 +617,22 @@ export class PlayerAI {
                     )
 
                     setBoard((prevBoard) => {
-                        const newBoard = deepCopy(board)
-
-                        newBoard[bestRanked.selected.col] = [
-                            ...prevBoard[bestRanked.selected.col],
-                        ]
-                        newBoard[bestRanked.selected.col][
+                        prevBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
                         ] = {}
-                        newBoard[col][idx] = bestRanked.selected.piece
+                        prevBoard[col][idx] = bestRanked.selected.piece
+                        return prevBoard
+                        // const newBoard = deepCopy(board)
 
-                        return newBoard
+                        // newBoard[bestRanked.selected.col] = [
+                        //     ...prevBoard[bestRanked.selected.col],
+                        // ]
+                        // newBoard[bestRanked.selected.col][
+                        //     bestRanked.selected.idx
+                        // ] = {}
+                        // newBoard[col][idx] = bestRanked.selected.piece
+
+                        // return newBoard
                     })
                 }
             }
