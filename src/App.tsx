@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Board, columns, initialBoard } from './constants/board'
 import { PlayerAI, SelectedPiece } from './classes/AI'
 import {
+    deepCopy,
     exposedKing,
     getMoveCol,
     getMoveIdx,
@@ -35,6 +36,11 @@ import winnersCupImg from './assets/others/trophy-svgrepo-com.svg'
 import timesImg from './assets/others/times-svgrepo-com.svg'
 import handshakeImg from './assets/others/hand-shake-svgrepo-com.svg'
 
+export interface repetition {
+    id: null | number
+    moves: string[]
+}
+
 const loserIcon = (
     <div style={{ position: 'relative' }}>
         <img
@@ -61,6 +67,10 @@ const winnerIcon = <img src={winnersCupImg} alt="Winner's Cup" />
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
+    const [repetition, setRepetition] = useState({
+        ai: { id: null, moves: [] },
+        player: { id: null, moves: [] },
+    } as { ai: repetition; player: repetition })
     // Counter that determines the current number of turns
     const [turnCount, setTurnCount] = useState(1)
     // State that stores a pawn available for coronation
@@ -209,14 +219,19 @@ export default function PvAI() {
                     })
                 ) {
                     setBoard((prevBoard) => {
-                        prevBoard[selected.col][selected.idx] = {}
-                        prevBoard[col][idx] = selected.piece
-                        return prevBoard
+                        const newBoard = deepCopy(board)
+
+                        newBoard[selected.col] = [...prevBoard[selected.col]]
+                        newBoard[selected.col][selected.idx] = {}
+                        newBoard[col][idx] = selected.piece
+
+                        return newBoard
                     })
 
                     selected.ele.style.border = ''
                     selected.ele.style.backgroundColor = ''
 
+                    addRepetition(selected.piece.id, col + idx, true)
                     setValidMoves([])
                     setSelected(null)
                     setTurn(false)
@@ -236,14 +251,19 @@ export default function PvAI() {
             validMoves.includes(col + idx)
         ) {
             setBoard((prevBoard) => {
-                prevBoard[selected.col][selected.idx] = {}
-                prevBoard[col][idx] = selected.piece
-                return prevBoard
+                const newBoard = deepCopy(board)
+
+                newBoard[selected.col] = [...prevBoard[selected.col]]
+                newBoard[selected.col][selected.idx] = {}
+                newBoard[col][idx] = selected.piece
+
+                return newBoard
             })
 
             selected.ele.style.border = ''
             selected.ele.style.backgroundColor = ''
 
+            addRepetition(selected.piece.id, col + idx, true)
             setValidMoves([])
             setSelected(null)
             setTurn(false)
@@ -270,7 +290,8 @@ export default function PvAI() {
                     setTurn,
                     setTurnCount,
                     coronation,
-                    toCrown
+                    toCrown,
+                    addRepetition
                 )
             }, 150)
         }
@@ -379,6 +400,34 @@ export default function PvAI() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
 
+    // Detect tied for repetitions
+    useEffect(() => {
+        console.log(repetition.player.moves)
+        const counters: { [key: string]: number } = {}
+
+        repetition.player.moves.forEach(
+            (move) => (counters[move] = (counters[move] || 0) + 1)
+        )
+
+        repetition.ai.moves.forEach(
+            (move) => (counters[move] = (counters[move] || 0) + 1)
+        )
+
+        for (const move of Object.keys(counters))
+            if (counters[move] >= 3) {
+                console.log(move)
+                console.log(counters[move])
+                setTie(true)
+            }
+    }, [
+        repetition.ai,
+        repetition.ai.id,
+        repetition.ai.moves,
+        repetition.player,
+        repetition.player.id,
+        repetition.player.moves,
+    ])
+
     // Crown a pawn
     const toCrown = (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => {
         if (coronation && piece) {
@@ -419,14 +468,64 @@ export default function PvAI() {
 
             if (newPiece) {
                 setBoard((prevBoard) => {
-                    prevBoard[coronation.col][coronation.idx] =
+                    const newBoard = deepCopy(prevBoard)
+
+                    newBoard[coronation.col] = [...prevBoard[coronation.col]]
+                    newBoard[coronation.col][coronation.idx] =
                         newPiece as ChessPieceType
-                    return prevBoard
+
+                    return newBoard
                 })
             }
         }
 
         setCoronation(null)
+    }
+
+    const addRepetition = (pieceId: number, move: string, player: boolean) => {
+        if (player) {
+            if (repetition.player.id === pieceId)
+                setRepetition((prevRepetition) => {
+                    return {
+                        ...prevRepetition,
+                        player: {
+                            ...prevRepetition.player,
+                            moves: [...prevRepetition.player.moves, move],
+                        },
+                    }
+                })
+            else
+                setRepetition((prevRepetition) => {
+                    return {
+                        ...prevRepetition,
+                        player: {
+                            id: pieceId,
+                            moves: [move],
+                        },
+                    }
+                })
+        } else {
+            if (repetition.ai.id === pieceId)
+                setRepetition((prevRepetition) => {
+                    return {
+                        ...prevRepetition,
+                        ai: {
+                            ...prevRepetition.ai,
+                            moves: [...prevRepetition.ai.moves, move],
+                        },
+                    }
+                })
+            else
+                setRepetition((prevRepetition) => {
+                    return {
+                        ...prevRepetition,
+                        ai: {
+                            id: pieceId,
+                            moves: [move],
+                        },
+                    }
+                })
+        }
     }
 
     // Reset the game

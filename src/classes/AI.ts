@@ -318,7 +318,8 @@ export class PlayerAI {
         setTurn: React.Dispatch<React.SetStateAction<boolean>>,
         setTurnCount: React.Dispatch<React.SetStateAction<number>>,
         coronation: SelectedPiece | null,
-        toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void
+        toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void,
+        addRepetition: (pieceId: number, move: string, player: boolean) => void
     ) => {
         // Remaining AI (enemy) pieces on the board
         const remaining = columns
@@ -380,12 +381,24 @@ export class PlayerAI {
                     const col = getMoveCol(bestRanked.move)
                     const idx = getMoveIdx(bestRanked.move)
 
+                    addRepetition(
+                        bestRanked.selected.piece.id,
+                        bestRanked.move,
+                        false
+                    )
+
                     setBoard((prevBoard) => {
-                        prevBoard[bestRanked.selected.col][
+                        const newBoard = deepCopy(board)
+
+                        newBoard[bestRanked.selected.col] = [
+                            ...prevBoard[bestRanked.selected.col],
+                        ]
+                        newBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
                         ] = {}
-                        prevBoard[col][idx] = bestRanked.selected.piece
-                        return prevBoard
+                        newBoard[col][idx] = bestRanked.selected.piece
+
+                        return newBoard
                     })
                 }
             }
@@ -530,12 +543,24 @@ export class PlayerAI {
                     const col = getMoveCol(bestRanked.move)
                     const idx = getMoveIdx(bestRanked.move)
 
+                    addRepetition(
+                        bestRanked.selected.piece.id,
+                        bestRanked.move,
+                        false
+                    )
+
                     setBoard((prevBoard) => {
-                        prevBoard[bestRanked.selected.col][
+                        const newBoard = deepCopy(board)
+
+                        newBoard[bestRanked.selected.col] = [
+                            ...prevBoard[bestRanked.selected.col],
+                        ]
+                        newBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
                         ] = {}
-                        prevBoard[col][idx] = bestRanked.selected.piece
-                        return prevBoard
+                        newBoard[col][idx] = bestRanked.selected.piece
+
+                        return newBoard
                     })
                 }
             }
