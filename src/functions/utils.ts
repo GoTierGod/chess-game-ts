@@ -116,7 +116,7 @@ export const isExposed = (
     // Locate enemy knights
     for (const column of columns) {
         for (const cell of board[column]) {
-            if (cell instanceof Knight && cell?.player !== player) {
+            if (cell instanceof Knight && cell.player !== player) {
                 allAround.push(column + board[column].indexOf(cell))
             }
         }
@@ -227,4 +227,44 @@ export const exposedKing = (
     }
 
     return null
+}
+
+export const isTied = (board: Board, player: boolean) => {
+    let tied = true
+
+    const pieces: SelectedPiece[] = []
+    for (const col of columns) {
+        for (let idx = 0; idx < board[col].length; idx++) {
+            const cell = board[col][idx]
+            if ('player' in cell && cell.player === player)
+                pieces.push({ col, idx, piece: cell })
+        }
+    }
+
+    for (const piece of pieces) {
+        let moves = piece.piece
+            .moves(piece.col, piece.idx)
+            .filter(
+                (move) =>
+                    !piece.piece.isClogged(
+                        board,
+                        { col: piece.col, idx: piece.idx },
+                        { col: getMoveCol(move), idx: getMoveIdx(move) }
+                    )
+            )
+
+        if (piece.piece.name === 'King')
+            moves = moves.filter((move) =>
+                isExposed(
+                    board,
+                    piece,
+                    { col: getMoveCol(move), idx: getMoveIdx(move) },
+                    player
+                )
+            )
+
+        if (moves.length) tied = false
+    }
+
+    return tied
 }

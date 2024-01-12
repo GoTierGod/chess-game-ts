@@ -8,6 +8,7 @@ import {
     getMoveCol,
     getMoveIdx,
     isExposed,
+    isTied,
 } from './functions/utils'
 import {
     Bishop,
@@ -60,6 +61,9 @@ const winnerIcon = <img src={winnersCupImg} alt="Winner's Cup" />
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
+    // Counter that determines the current number of turns
+    const [turnCount, setTurnCount] = useState(1)
+    // State that stores a pawn available for coronation
     const [coronation, setCoronation] = useState(null as null | SelectedPiece)
     // State that determines if player (true) or AI (false) won the game, otherwise it's set to "null"
     const [winner, setWinner] = useState(null as null | boolean)
@@ -216,6 +220,7 @@ export default function PvAI() {
                     setValidMoves([])
                     setSelected(null)
                     setTurn(false)
+                    setTurnCount((prevTurnCount) => prevTurnCount + 1)
                 }
             }
         }
@@ -263,8 +268,7 @@ export default function PvAI() {
                     setBoard,
                     setSelected,
                     setTurn,
-                    setTie,
-                    winner,
+                    setTurnCount,
                     coronation,
                     toCrown
                 )
@@ -272,7 +276,7 @@ export default function PvAI() {
         }
     }
 
-    // Detect exposed king
+    // Detect a exposed king
     useEffect(() => {
         const ekPlayer = exposedKing(board, true)
         const ekAi = exposedKing(board, false)
@@ -290,45 +294,13 @@ export default function PvAI() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
 
-    // Detect player tie
+    // Detect a tie
     useEffect(() => {
-        let isTied = true
+        if (turnCount !== 1) {
+            const tied = isTied(board, true) || isTied(board, false)
 
-        const playerPieces: SelectedPiece[] = []
-        for (const col of columns) {
-            for (let idx = 0; idx < col.length; idx++) {
-                const cell = board[col][idx]
-                if ('player' in cell && cell.player)
-                    playerPieces.push({ col, idx, piece: cell })
-            }
+            tied && setTie(true)
         }
-
-        for (const piece of playerPieces) {
-            let moves = piece.piece
-                .moves(piece.col, piece.idx)
-                .filter(
-                    (move) =>
-                        !piece.piece.isClogged(
-                            board,
-                            { col: piece.col, idx: piece.idx },
-                            { col: getMoveCol(move), idx: getMoveIdx(move) }
-                        )
-                )
-
-            if (piece.piece.name === 'King')
-                moves = moves.filter((move) =>
-                    isExposed(
-                        board,
-                        piece,
-                        { col: getMoveCol(move), idx: getMoveIdx(move) },
-                        true
-                    )
-                )
-
-            if (moves.length) isTied = false
-        }
-
-        isTied && setTie(true)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
 
@@ -385,6 +357,7 @@ export default function PvAI() {
         }
     }, [board, turn, selected, exposed])
 
+    // Detect a pawn available for coronation
     useEffect(() => {
         for (const col of columns) {
             for (let idx = 0; idx < board[col].length; idx++) {
@@ -406,6 +379,7 @@ export default function PvAI() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
 
+    // Crown a pawn
     const toCrown = (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => {
         if (coronation && piece) {
             let newPiece: null | ChessPieceType = null
@@ -455,13 +429,14 @@ export default function PvAI() {
         setCoronation(null)
     }
 
+    // Reset the game
     const resetBoard = () => location.reload()
 
     // Log winner
-    useEffect(() => {
-        if (winner === true) console.log(`Player wins!`)
-        else if (winner === false) console.log('AI wins!')
-    }, [winner])
+    // useEffect(() => {
+    //     if (winner === true) console.log(`Player wins!`)
+    //     else if (winner === false) console.log('AI wins!')
+    // }, [winner])
 
     return (
         <div className={style.wrapper}>

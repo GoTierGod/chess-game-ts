@@ -316,8 +316,7 @@ export class PlayerAI {
             } | null>
         >,
         setTurn: React.Dispatch<React.SetStateAction<boolean>>,
-        setTie: React.Dispatch<React.SetStateAction<boolean>>,
-        winner: null | boolean,
+        setTurnCount: React.Dispatch<React.SetStateAction<number>>,
         coronation: SelectedPiece | null,
         toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void
     ) => {
@@ -388,16 +387,13 @@ export class PlayerAI {
                         prevBoard[col][idx] = bestRanked.selected.piece
                         return prevBoard
                     })
-
-                    setSelected(null)
-                    setTurn(true)
                 }
             }
         }
 
         // Move function
         const moveAction = () => {
-            if (blacklist.length !== remaining) {
+            if (blacklist.length < remaining) {
                 // 1. Choose a piece
                 const selectRandomPiece = (): SelectedPiece => {
                     const col =
@@ -541,16 +537,18 @@ export class PlayerAI {
                         prevBoard[col][idx] = bestRanked.selected.piece
                         return prevBoard
                     })
-
-                    setSelected(null)
-                    setTurn(true)
-                } else if (!ranking.length && winner === null) setTie(true)
+                }
             }
         }
 
         // Invoke the correct function
         if (safe) safeMoveAction()
         else moveAction()
+
+        setSelected(null)
+        setTurn(true)
+
+        setTurnCount((prevTurnCount) => prevTurnCount + 1)
 
         if (coronation && !coronation.piece.player) {
             toCrown('Queen')
