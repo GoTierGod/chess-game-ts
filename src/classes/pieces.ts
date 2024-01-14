@@ -80,14 +80,13 @@ export class Pawn extends ChessPiece {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
-        if ('player' in nextPosition && nextPosition.player === this.player)
-            return true
-        else if (next.col === current.col && 'id' in nextPosition) return true
+        if (nextPosition && nextPosition.player === this.player) return true
+        else if (next.col === current.col && nextPosition) return true
         return this.player
             ? current.idx === next.idx - 2 &&
-                  'id' in board[next.col][next.idx - 1]
+                  Boolean(board[next.col][next.idx - 1])
             : current.idx === next.idx + 2 &&
-                  'id' in board[next.col][next.idx + 1]
+                  Boolean(board[next.col][next.idx + 1])
     }
 
     getCaptureMoves = (board: Board, col: string, idx: number): string[] => {
@@ -159,7 +158,7 @@ export class Queen extends ChessPiece {
             verticalCollision(board, current, next) ||
             horizontalCollision(board, current, next) ||
             diagonalCollision(board, current, next) ||
-            ('player' in nextPosition && nextPosition.player === this.player)
+            Boolean(nextPosition && nextPosition.player === this.player)
         )
     }
 
@@ -196,7 +195,7 @@ export class King extends ChessPiece {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
-        return 'player' in nextPosition && nextPosition.player === this.player
+        return Boolean(nextPosition && nextPosition.player === this.player)
     }
 
     getCaptureMoves = (
@@ -236,7 +235,7 @@ export class Bishop extends ChessPiece {
 
         return (
             diagonalCollision(board, current, next) ||
-            ('player' in nextPosition && nextPosition.player === this.player)
+            Boolean(nextPosition && nextPosition.player === this.player)
         )
     }
 
@@ -284,7 +283,7 @@ export class Knight extends ChessPiece {
         // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
-        return 'player' in nextPosition && nextPosition.player === this.player
+        return Boolean(nextPosition && nextPosition.player === this.player)
     }
 
     getCaptureMoves = (
@@ -325,7 +324,7 @@ export class Rook extends ChessPiece {
         return (
             verticalCollision(board, current, next) ||
             horizontalCollision(board, current, next) ||
-            ('player' in nextPosition && nextPosition.player === this.player)
+            Boolean(nextPosition && nextPosition.player === this.player)
         )
     }
 

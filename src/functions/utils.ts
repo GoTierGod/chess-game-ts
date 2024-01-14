@@ -65,9 +65,7 @@ export const captureMoves = (
 
             const thisPosition = board[col][idx]
 
-            return (
-                'player' in thisPosition && thisPosition.player !== piece.player
-            )
+            return thisPosition && thisPosition.player !== piece.player
         })
 
     return removeImpossibles(cm) as string[]
@@ -102,7 +100,7 @@ export const isExposed = (
     const fantasyBoard = (() => {
         const mirrorBoard = deepCopy(board)
 
-        mirrorBoard[current.col][current.idx] = {}
+        mirrorBoard[current.col][current.idx] = null
         mirrorBoard[next.col][next.idx] = current.piece
 
         return mirrorBoard
@@ -211,9 +209,8 @@ export const exposedKing = (
                 const movePosition = board[getMoveCol(move)][getMoveIdx(move)]
 
                 return (
-                    ('player' in movePosition &&
-                        movePosition.player !== player) ||
-                    !('player' in movePosition)
+                    (movePosition && movePosition.player !== player) ||
+                    !movePosition
                 )
             })
 
@@ -236,7 +233,7 @@ export const isTied = (board: Board, player: boolean) => {
     for (const col of columns) {
         for (let idx = 0; idx < board[col].length; idx++) {
             const cell = board[col][idx]
-            if ('player' in cell && cell.player === player)
+            if (cell && cell.player === player)
                 pieces.push({ col, idx, piece: cell })
         }
     }

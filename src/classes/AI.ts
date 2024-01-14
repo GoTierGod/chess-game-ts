@@ -29,7 +29,7 @@ export class PlayerAI {
         const fantasyBoard = (() => {
             const mirrorBoard = deepCopy(board)
 
-            mirrorBoard[current.col][current.idx] = {}
+            mirrorBoard[current.col][current.idx] = null
             mirrorBoard[col][idx] = current.piece
 
             return mirrorBoard
@@ -97,7 +97,7 @@ export class PlayerAI {
         const fantasyBoard = (() => {
             const mirrorBoard = deepCopy(board)
 
-            mirrorBoard[current.col][current.idx] = {}
+            mirrorBoard[current.col][current.idx] = null
             mirrorBoard[col][idx] = current.piece
 
             return mirrorBoard
@@ -199,7 +199,7 @@ export class PlayerAI {
         const fantasyBoard = (() => {
             const mirrorBoard = deepCopy(board)
 
-            mirrorBoard[current.col][current.idx] = {}
+            mirrorBoard[current.col][current.idx] = null
             mirrorBoard[col][idx] = current.piece
 
             return mirrorBoard
@@ -217,8 +217,7 @@ export class PlayerAI {
 
             const thisPosition = fantasyBoard[thisCol][thisIdx]
             if (
-                'player' &&
-                'name' in thisPosition &&
+                thisPosition &&
                 thisPosition.player !== current.piece.player &&
                 thisPosition.name === 'King'
             ) {
@@ -261,7 +260,7 @@ export class PlayerAI {
             col,
             idx,
             selected,
-            'id' in eaten ? eaten : null
+            eaten || null
         )
             // From lower to higher
             .sort((a, b) => a.from.piece.value - b.from.piece.value)
@@ -282,7 +281,7 @@ export class PlayerAI {
         const isExposing = this.#expPredict(board, col, idx, selected)
         if (isExposing.exposing && !isExposing.exposed) score += 1000
 
-        if (scores === 0) score += 'value' in eaten ? eaten.value : -1
+        if (scores === 0) score += eaten ? eaten.value : -1
         else score += scores
 
         const lastPredict = ofPredict[0]
@@ -328,7 +327,7 @@ export class PlayerAI {
             .map((col) => {
                 let ct = 0
                 for (const square of board[col]) {
-                    if ('player' in square && !square.player) ct++
+                    if (square && !square.player) ct++
                 }
                 return ct
             })
@@ -422,7 +421,7 @@ export class PlayerAI {
                     setBoard((prevBoard) => {
                         prevBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
-                        ] = {}
+                        ] = null
                         prevBoard[col][idx] = bestRanked.selected.piece
                         return prevBoard
                         // const newBoard = deepCopy(board)
@@ -432,7 +431,7 @@ export class PlayerAI {
                         // ]
                         // newBoard[bestRanked.selected.col][
                         //     bestRanked.selected.idx
-                        // ] = {}
+                        // ] = null
                         // newBoard[col][idx] = bestRanked.selected.piece
 
                         // return newBoard
@@ -454,7 +453,7 @@ export class PlayerAI {
                     const current = board[col][idx]
 
                     if (
-                        'player' in current &&
+                        current &&
                         !current.player &&
                         !blacklist.includes(current?.id)
                     ) {
@@ -619,7 +618,7 @@ export class PlayerAI {
                     setBoard((prevBoard) => {
                         prevBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
-                        ] = {}
+                        ] = null
                         prevBoard[col][idx] = bestRanked.selected.piece
                         return prevBoard
                         // const newBoard = deepCopy(board)
@@ -629,7 +628,7 @@ export class PlayerAI {
                         // ]
                         // newBoard[bestRanked.selected.col][
                         //     bestRanked.selected.idx
-                        // ] = {}
+                        // ] = null
                         // newBoard[col][idx] = bestRanked.selected.piece
 
                         // return newBoard

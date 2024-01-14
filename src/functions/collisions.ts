@@ -21,7 +21,8 @@ export const verticalCollision = (
             .map((_v, i) => i + lowerIdx + 1)
 
         for (const idx of verticalRange) {
-            if ('id' in board[next.col][idx]) {
+            const current = board[next.col][idx]
+            if (current) {
                 // console.log('vertical')
                 return true
             }
@@ -50,7 +51,8 @@ export const horizontalCollision = (
                 : columns.slice(nextColIdx + 1, currentColIdx)
 
         for (const col of horizontalRange) {
-            if ('id' in board[col][next.idx]) {
+            const current = board[col][next.idx]
+            if (current) {
                 // console.log('horizontal')
                 return true
             }
@@ -99,7 +101,8 @@ export const diagonalCollision = (
                       )
 
         for (let i = 0; i < verticalRange.length; i++) {
-            if ('id' in board[horizontalRange[i]][verticalRange[i]]) {
+            const current = board[horizontalRange[i]][verticalRange[i]]
+            if (current) {
                 return true
             }
         }

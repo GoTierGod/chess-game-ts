@@ -105,12 +105,12 @@ export default function PvAI() {
     // Player king ref
     const playerKingRef = useRef(null as null | HTMLDivElement)
 
-    // Main function for player actions
+    // Method - Main function for player actions
     const playerAction = (
         element: HTMLDivElement,
         col: string,
         idx: number,
-        piece: object | ChessPieceType
+        piece: null | ChessPieceType
     ) => {
         const nextPosition = board[col][idx]
         // Standard player turn
@@ -120,7 +120,7 @@ export default function PvAI() {
             (!exposed || !exposed.king.piece.player)
         ) {
             // Standard player piece selection
-            if ('player' in piece && piece.player) {
+            if (piece && piece.player) {
                 setValidMoves([])
 
                 setSelected((prevSelected) => {
@@ -164,7 +164,7 @@ export default function PvAI() {
                                           board[getMoveCol(move)][
                                               getMoveIdx(move)
                                           ] as ChessPieceType
-                                      ).player
+                                      )?.player
                               )
                         : [
                               ...piece.moves(col, idx),
@@ -200,9 +200,7 @@ export default function PvAI() {
                               },
                               true
                           ) &&
-                          ('id' in nextPosition
-                              ? nextPosition.player !== true
-                              : true)
+                          (nextPosition ? nextPosition.player !== true : true)
                         : selected.piece
                               .moves(selected.col, selected.idx)
                               .includes(col + idx) ||
@@ -219,13 +217,13 @@ export default function PvAI() {
                     })
                 ) {
                     setBoard((prevBoard) => {
-                        prevBoard[selected.col][selected.idx] = {}
+                        prevBoard[selected.col][selected.idx] = null
                         prevBoard[col][idx] = selected.piece
                         return prevBoard
                         // const newBoard = deepCopy(board)
 
                         // newBoard[selected.col] = [...prevBoard[selected.col]]
-                        // newBoard[selected.col][selected.idx] = {}
+                        // newBoard[selected.col][selected.idx] = null
                         // newBoard[col][idx] = selected.piece
 
                         // return newBoard
@@ -235,6 +233,7 @@ export default function PvAI() {
                     selected.ele.style.backgroundColor = ''
 
                     addRepetition(selected.piece.id, col + idx, true)
+
                     setValidMoves([])
                     setSelected(null)
                     setTurn(false)
@@ -250,17 +249,17 @@ export default function PvAI() {
             exposed &&
             exposed.king.piece.player &&
             exposed.safes.length &&
-            ('id' in nextPosition ? nextPosition.player !== true : true) &&
+            (nextPosition ? nextPosition.player !== true : true) &&
             validMoves.includes(col + idx)
         ) {
             setBoard((prevBoard) => {
-                prevBoard[selected.col][selected.idx] = {}
+                prevBoard[selected.col][selected.idx] = null
                 prevBoard[col][idx] = selected.piece
                 return prevBoard
                 // const newBoard = deepCopy(board)
 
                 // newBoard[selected.col] = [...prevBoard[selected.col]]
-                // newBoard[selected.col][selected.idx] = {}
+                // newBoard[selected.col][selected.idx] = null
                 // newBoard[col][idx] = selected.piece
 
                 // return newBoard
@@ -270,6 +269,7 @@ export default function PvAI() {
             selected.ele.style.backgroundColor = ''
 
             addRepetition(selected.piece.id, col + idx, true)
+
             setValidMoves([])
             setSelected(null)
             setTurn(false)
@@ -277,6 +277,7 @@ export default function PvAI() {
         }
     }
 
+    // Method - Execute the AI actions
     const executeAI = (
         safe: boolean,
         exposed: {
@@ -304,7 +305,111 @@ export default function PvAI() {
         }
     }
 
-    // Detect a exposed king
+    // Method -Crown a pawn
+    const toCrown = (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => {
+        if (coronation && piece) {
+            let newPiece: null | ChessPieceType = null
+
+            switch (piece) {
+                case 'Queen':
+                    newPiece = new Queen(
+                        coronation.piece.player,
+                        coronation.piece.id
+                    )
+                    break
+
+                case 'Bishop':
+                    newPiece = new Bishop(
+                        coronation.piece.player,
+                        coronation.piece.id
+                    )
+                    break
+
+                case 'Knight':
+                    newPiece = new Knight(
+                        coronation.piece.player,
+                        coronation.piece.id
+                    )
+                    break
+
+                case 'Rook':
+                    newPiece = new Rook(
+                        coronation.piece.player,
+                        coronation.piece.id
+                    )
+                    break
+
+                default:
+                    break
+            }
+
+            if (newPiece) {
+                setBoard((prevBoard) => {
+                    const newBoard = deepCopy(prevBoard)
+
+                    newBoard[coronation.col] = [...prevBoard[coronation.col]]
+                    newBoard[coronation.col][coronation.idx] =
+                        newPiece as ChessPieceType
+
+                    return newBoard
+                })
+            }
+        }
+
+        setCoronation(null)
+    }
+
+    // Method - Add a move repetition
+    const addRepetition = (pieceId: number, move: string, player: boolean) => {
+        if (player) {
+            if (repetition.player.id === pieceId)
+                setRepetition((prevRepetition) => {
+                    return {
+                        ...prevRepetition,
+                        player: {
+                            ...prevRepetition.player,
+                            moves: [...prevRepetition.player.moves, move],
+                        },
+                    }
+                })
+            else
+                setRepetition((prevRepetition) => {
+                    return {
+                        ...prevRepetition,
+                        player: {
+                            id: pieceId,
+                            moves: [move],
+                        },
+                    }
+                })
+        } else {
+            if (repetition.ai.id === pieceId)
+                setRepetition((prevRepetition) => {
+                    return {
+                        ...prevRepetition,
+                        ai: {
+                            ...prevRepetition.ai,
+                            moves: [...prevRepetition.ai.moves, move],
+                        },
+                    }
+                })
+            else
+                setRepetition((prevRepetition) => {
+                    return {
+                        ...prevRepetition,
+                        ai: {
+                            id: pieceId,
+                            moves: [move],
+                        },
+                    }
+                })
+        }
+    }
+
+    // Method - Reset the game
+    const resetBoard = () => location.reload()
+
+    // Detect a exposed king and execute the AI turn
     useEffect(() => {
         const ekPlayer = exposedKing(board, true)
         const ekAi = exposedKing(board, false)
@@ -432,109 +537,6 @@ export default function PvAI() {
         repetition.player.moves,
     ])
 
-    // Crown a pawn
-    const toCrown = (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => {
-        if (coronation && piece) {
-            let newPiece: null | ChessPieceType = null
-
-            switch (piece) {
-                case 'Queen':
-                    newPiece = new Queen(
-                        coronation.piece.player,
-                        coronation.piece.id
-                    )
-                    break
-
-                case 'Bishop':
-                    newPiece = new Bishop(
-                        coronation.piece.player,
-                        coronation.piece.id
-                    )
-                    break
-
-                case 'Knight':
-                    newPiece = new Knight(
-                        coronation.piece.player,
-                        coronation.piece.id
-                    )
-                    break
-
-                case 'Rook':
-                    newPiece = new Rook(
-                        coronation.piece.player,
-                        coronation.piece.id
-                    )
-                    break
-
-                default:
-                    break
-            }
-
-            if (newPiece) {
-                setBoard((prevBoard) => {
-                    const newBoard = deepCopy(prevBoard)
-
-                    newBoard[coronation.col] = [...prevBoard[coronation.col]]
-                    newBoard[coronation.col][coronation.idx] =
-                        newPiece as ChessPieceType
-
-                    return newBoard
-                })
-            }
-        }
-
-        setCoronation(null)
-    }
-
-    const addRepetition = (pieceId: number, move: string, player: boolean) => {
-        if (player) {
-            if (repetition.player.id === pieceId)
-                setRepetition((prevRepetition) => {
-                    return {
-                        ...prevRepetition,
-                        player: {
-                            ...prevRepetition.player,
-                            moves: [...prevRepetition.player.moves, move],
-                        },
-                    }
-                })
-            else
-                setRepetition((prevRepetition) => {
-                    return {
-                        ...prevRepetition,
-                        player: {
-                            id: pieceId,
-                            moves: [move],
-                        },
-                    }
-                })
-        } else {
-            if (repetition.ai.id === pieceId)
-                setRepetition((prevRepetition) => {
-                    return {
-                        ...prevRepetition,
-                        ai: {
-                            ...prevRepetition.ai,
-                            moves: [...prevRepetition.ai.moves, move],
-                        },
-                    }
-                })
-            else
-                setRepetition((prevRepetition) => {
-                    return {
-                        ...prevRepetition,
-                        ai: {
-                            id: pieceId,
-                            moves: [move],
-                        },
-                    }
-                })
-        }
-    }
-
-    // Reset the game
-    const resetBoard = () => location.reload()
-
     // useEffect(() => {
     //     console.log(exposed)
     // }, [exposed])
@@ -577,7 +579,7 @@ export default function PvAI() {
                                         cell.player
                                             ? exposedKingStyle
                                             : validMoves.includes(col + idx)
-                                              ? 'id' in cell
+                                              ? cell
                                                   ? exposedPieceStyle
                                                   : availableMoveStyle
                                               : { display: 'none' }
@@ -585,13 +587,13 @@ export default function PvAI() {
                                 >
                                     <div
                                         style={
-                                            'id' in cell
+                                            cell
                                                 ? innerAvailableMoveStyle
                                                 : { display: 'none' }
                                         }
                                     />
                                 </div>
-                                {'id' in cell && (
+                                {cell && (
                                     <img
                                         src={cell.image.src}
                                         alt={cell.image.alt}
