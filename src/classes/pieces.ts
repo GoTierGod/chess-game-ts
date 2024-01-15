@@ -48,7 +48,8 @@ abstract class ChessPiece {
 }
 
 export class Pawn extends ChessPiece {
-    public name = 'Pawn'
+    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
+        'Pawn'
     public value = 1
     public image: PieceImage
 
@@ -130,7 +131,8 @@ export class Pawn extends ChessPiece {
 }
 
 export class Queen extends ChessPiece {
-    public name = 'Queen'
+    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
+        'Queen'
     public value = 50
     public image: PieceImage
 
@@ -171,7 +173,8 @@ export class Queen extends ChessPiece {
 }
 
 export class King extends ChessPiece {
-    public name = 'King'
+    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
+        'King'
     public value = 1000
     public image: PieceImage
 
@@ -209,7 +212,8 @@ export class King extends ChessPiece {
 }
 
 export class Bishop extends ChessPiece {
-    public name = 'Bishop'
+    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
+        'Bishop'
     public value = 4
     public image: PieceImage
 
@@ -250,7 +254,8 @@ export class Bishop extends ChessPiece {
 }
 
 export class Knight extends ChessPiece {
-    public name = 'Knight'
+    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
+        'Knight'
     public value = 3
     public image: PieceImage
 
@@ -297,7 +302,8 @@ export class Knight extends ChessPiece {
 }
 
 export class Rook extends ChessPiece {
-    public name = 'Rook'
+    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
+        'Rook'
     public value = 5
     public image: PieceImage
 

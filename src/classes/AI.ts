@@ -1,7 +1,7 @@
 import { repetition } from '../App'
 import { players, columns, Board } from '../constants/board'
 import { deepCopy, getMoveCol, getMoveIdx, isExposed } from '../functions/utils'
-import { ChessPieceType, King, Knight, Queen } from './pieces'
+import { ChessPieceType, Queen } from './pieces'
 
 export interface SelectedPiece {
     col: string
@@ -117,9 +117,10 @@ export class PlayerAI {
         for (const column of columns) {
             for (const cell of fantasyBoard[column]) {
                 if (
-                    cell instanceof Knight &&
+                    cell &&
                     !cell.player &&
-                    cell.id !== current.piece.id
+                    cell.id !== current.piece.id &&
+                    cell.name === 'Knight'
                 ) {
                     allAround.push(column + fantasyBoard[column].indexOf(cell))
                 }
@@ -141,7 +142,7 @@ export class PlayerAI {
                 thisIdx
             )
 
-            if (piece instanceof King) {
+            if (piece.name === 'King') {
                 captureMoves = captureMoves.filter(
                     (move) =>
                         !isExposed(
@@ -315,7 +316,6 @@ export class PlayerAI {
                 piece: ChessPieceType
             } | null>
         >,
-        setTurn: React.Dispatch<React.SetStateAction<boolean>>,
         setTurnCount: React.Dispatch<React.SetStateAction<number>>,
         coronation: SelectedPiece | null,
         toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void,
@@ -419,22 +419,17 @@ export class PlayerAI {
                     )
 
                     setBoard((prevBoard) => {
-                        prevBoard[bestRanked.selected.col][
+                        const newBoard = deepCopy(board)
+
+                        newBoard[bestRanked.selected.col] = [
+                            ...prevBoard[bestRanked.selected.col],
+                        ]
+                        newBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
                         ] = null
-                        prevBoard[col][idx] = bestRanked.selected.piece
-                        return prevBoard
-                        // const newBoard = deepCopy(board)
+                        newBoard[col][idx] = bestRanked.selected.piece
 
-                        // newBoard[bestRanked.selected.col] = [
-                        //     ...prevBoard[bestRanked.selected.col],
-                        // ]
-                        // newBoard[bestRanked.selected.col][
-                        //     bestRanked.selected.idx
-                        // ] = null
-                        // newBoard[col][idx] = bestRanked.selected.piece
-
-                        // return newBoard
+                        return newBoard
                     })
                 }
             }
@@ -478,7 +473,7 @@ export class PlayerAI {
                                 })
                         )
 
-                    if (selected.piece instanceof King) {
+                    if (selected.piece.name === 'King') {
                         moves = moves.filter(
                             (move) =>
                                 !isExposed(
@@ -512,7 +507,7 @@ export class PlayerAI {
                             return 0
                         })
 
-                    if (selected.piece instanceof King) {
+                    if (selected.piece.name === 'King') {
                         capMoves = capMoves.filter(
                             (move) =>
                                 !isExposed(
@@ -616,22 +611,17 @@ export class PlayerAI {
                     )
 
                     setBoard((prevBoard) => {
-                        prevBoard[bestRanked.selected.col][
+                        const newBoard = deepCopy(board)
+
+                        newBoard[bestRanked.selected.col] = [
+                            ...prevBoard[bestRanked.selected.col],
+                        ]
+                        newBoard[bestRanked.selected.col][
                             bestRanked.selected.idx
                         ] = null
-                        prevBoard[col][idx] = bestRanked.selected.piece
-                        return prevBoard
-                        // const newBoard = deepCopy(board)
+                        newBoard[col][idx] = bestRanked.selected.piece
 
-                        // newBoard[bestRanked.selected.col] = [
-                        //     ...prevBoard[bestRanked.selected.col],
-                        // ]
-                        // newBoard[bestRanked.selected.col][
-                        //     bestRanked.selected.idx
-                        // ] = null
-                        // newBoard[col][idx] = bestRanked.selected.piece
-
-                        // return newBoard
+                        return newBoard
                     })
                 }
             }
@@ -642,7 +632,7 @@ export class PlayerAI {
         else moveAction()
 
         setSelected(null)
-        setTurn(true)
+        // setTurn(true)
 
         setTurnCount((prevTurnCount) => prevTurnCount + 1)
 

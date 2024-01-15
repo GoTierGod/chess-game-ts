@@ -1,11 +1,5 @@
 import { SelectedPiece } from '../classes/AI'
-import {
-    ChessPieceType,
-    King,
-    Knight,
-    PieceCoords,
-    Queen,
-} from '../classes/pieces'
+import { ChessPieceType, PieceCoords, Queen } from '../classes/pieces'
 import { Board, columns } from '../constants/board'
 
 // Create an array of x null elements
@@ -114,7 +108,7 @@ export const isExposed = (
     // Locate enemy knights
     for (const column of columns) {
         for (const cell of board[column]) {
-            if (cell instanceof Knight && cell.player !== player) {
+            if (cell && cell.player !== player && cell.name === 'Knight') {
                 allAround.push(column + board[column].indexOf(cell))
             }
         }
@@ -151,7 +145,7 @@ export const exposedKing = (
     const kingPosition = (() => {
         for (const column of columns) {
             for (const cell of board[column]) {
-                if (cell instanceof King && cell.player === player) {
+                if (cell && cell.player === player && cell.name === 'King') {
                     return { col: column, idx: board[column].indexOf(cell) }
                 }
             }
@@ -169,7 +163,7 @@ export const exposedKing = (
         // Locate enemy knights
         for (const column of columns) {
             for (const cell of board[column]) {
-                if (cell instanceof Knight && cell.player !== player) {
+                if (cell && cell.player !== player && cell.name === 'Knight') {
                     allAround.push(column + board[column].indexOf(cell))
                 }
             }

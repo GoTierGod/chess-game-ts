@@ -14,9 +14,7 @@ import {
 import {
     Bishop,
     ChessPieceType,
-    King,
     Knight,
-    Pawn,
     PieceCoords,
     Queen,
     Rook,
@@ -141,7 +139,7 @@ export default function PvAI() {
                 })
 
                 setValidMoves(
-                    piece instanceof King
+                    piece && piece.name === 'King'
                         ? [
                               ...piece.moves(col, idx),
                               ...piece.getCaptureMoves(board, col, idx),
@@ -186,7 +184,7 @@ export default function PvAI() {
             else {
                 if (
                     selected &&
-                    (selected.piece instanceof King
+                    (selected.piece.name === 'King'
                         ? !isExposed(
                               board,
                               {
@@ -217,16 +215,13 @@ export default function PvAI() {
                     })
                 ) {
                     setBoard((prevBoard) => {
-                        prevBoard[selected.col][selected.idx] = null
-                        prevBoard[col][idx] = selected.piece
-                        return prevBoard
-                        // const newBoard = deepCopy(board)
+                        const newBoard = deepCopy(board)
 
-                        // newBoard[selected.col] = [...prevBoard[selected.col]]
-                        // newBoard[selected.col][selected.idx] = null
-                        // newBoard[col][idx] = selected.piece
+                        newBoard[selected.col] = [...prevBoard[selected.col]]
+                        newBoard[selected.col][selected.idx] = null
+                        newBoard[col][idx] = selected.piece
 
-                        // return newBoard
+                        return newBoard
                     })
 
                     selected.ele.style.border = ''
@@ -236,7 +231,7 @@ export default function PvAI() {
 
                     setValidMoves([])
                     setSelected(null)
-                    setTurn(false)
+                    // setTurn(false)
                     setTurnCount((prevTurnCount) => prevTurnCount + 1)
                 }
             }
@@ -253,16 +248,13 @@ export default function PvAI() {
             validMoves.includes(col + idx)
         ) {
             setBoard((prevBoard) => {
-                prevBoard[selected.col][selected.idx] = null
-                prevBoard[col][idx] = selected.piece
-                return prevBoard
-                // const newBoard = deepCopy(board)
+                const newBoard = deepCopy(board)
 
-                // newBoard[selected.col] = [...prevBoard[selected.col]]
-                // newBoard[selected.col][selected.idx] = null
-                // newBoard[col][idx] = selected.piece
+                newBoard[selected.col] = [...prevBoard[selected.col]]
+                newBoard[selected.col][selected.idx] = null
+                newBoard[col][idx] = selected.piece
 
-                // return newBoard
+                return newBoard
             })
 
             selected.ele.style.border = ''
@@ -272,7 +264,7 @@ export default function PvAI() {
 
             setValidMoves([])
             setSelected(null)
-            setTurn(false)
+            // setTurn(false)
             setExposed(null)
         }
     }
@@ -294,7 +286,6 @@ export default function PvAI() {
                     exposed,
                     setBoard,
                     setSelected,
-                    setTurn,
                     setTurnCount,
                     coronation,
                     toCrown,
@@ -409,6 +400,12 @@ export default function PvAI() {
     // Method - Reset the game
     const resetBoard = () => location.reload()
 
+    // Change turn
+    useEffect(() => {
+        if (turnCount !== 1) setTurn((prevTurn) => !prevTurn)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [board])
+
     // Detect a exposed king and execute the AI turn
     useEffect(() => {
         const ekPlayer = exposedKing(board, true)
@@ -449,7 +446,7 @@ export default function PvAI() {
             const kingPosition: PieceCoords | null = (() => {
                 for (const column of columns) {
                     for (const cell of board[column]) {
-                        if (cell instanceof King && cell.id && cell.player) {
+                        if (cell && cell.player && cell.name === 'King') {
                             return {
                                 col: column,
                                 idx: board[column].indexOf(cell),
@@ -488,14 +485,20 @@ export default function PvAI() {
                 }
             }
         }
-    }, [board, turn, selected, exposed])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [exposed])
 
     // Detect a pawn available for coronation
     useEffect(() => {
         for (const col of columns) {
             for (let idx = 0; idx < board[col].length; idx++) {
                 const current = board[col][idx]
-                if (current instanceof Pawn && current.player && idx === 7) {
+                if (
+                    current &&
+                    current.player &&
+                    idx === 7 &&
+                    current.name === 'Pawn'
+                ) {
                     setCoronation({ col, idx, piece: current })
                 }
             }
@@ -504,7 +507,12 @@ export default function PvAI() {
         for (const col of columns) {
             for (let idx = 0; idx < board[col].length; idx++) {
                 const current = board[col][idx]
-                if (current instanceof Pawn && !current.player && idx === 0) {
+                if (
+                    current &&
+                    !current.player &&
+                    idx === 0 &&
+                    current.name === 'Pawn'
+                ) {
                     setCoronation({ col, idx, piece: current })
                 }
             }
@@ -547,6 +555,17 @@ export default function PvAI() {
     //     else if (winner === false) console.log('AI wins!')
     // }, [winner])
 
+    // useEffect(() => console.log('BOARD'), [board])
+    // useEffect(() => console.log('EXPOSED'), [exposed])
+    // useEffect(() => console.log('- - - - - - - - - -'), [turn])
+    // useEffect(() => console.log('TURN COUNT'), [turnCount])
+    // useEffect(() => console.log('SELECTED'), [selected])
+    // useEffect(() => console.log('REPETITION'), [repetition])
+    // useEffect(() => console.log('VALID MOVES'), [validMoves])
+    // useEffect(() => console.log('WINNER'), [winner])
+    // useEffect(() => console.log('TIE'), [tie])
+    // useEffect(() => console.log('CORONATION'), [coronation])
+
     return (
         <div className={style.wrapper}>
             <div className={style.board}>
@@ -566,7 +585,7 @@ export default function PvAI() {
                                 }
                                 style={{ position: 'relative' }}
                                 ref={
-                                    cell instanceof King && cell.player
+                                    cell && cell.player && cell.name === 'King'
                                         ? playerKingRef
                                         : null
                                 }
@@ -575,8 +594,9 @@ export default function PvAI() {
                                     style={
                                         exposed &&
                                         exposed.king.piece.player &&
-                                        cell instanceof King &&
-                                        cell.player
+                                        cell &&
+                                        cell.player &&
+                                        cell.name === 'King'
                                             ? exposedKingStyle
                                             : validMoves.includes(col + idx)
                                               ? cell
