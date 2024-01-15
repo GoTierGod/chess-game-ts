@@ -65,7 +65,6 @@ const winnerIcon = <img src={winnersCupImg} alt="Winner's Cup" />
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
-    const [tiedFor, setTiedFor] = useState(null as null | ChessPieceType)
     const [repetition, setRepetition] = useState({
         ai: { piece: null, moves: [] },
         player: { piece: null, moves: [] },
@@ -81,7 +80,9 @@ export default function PvAI() {
     // State that determines if player (true) or AI (false) won the game, otherwise it's set to "null"
     const [winner, setWinner] = useState(null as null | boolean)
     // State that determines if there's a tie
-    const [tie, setTie] = useState(false)
+    const [tie, setTie] = useState(
+        null as null | { piece: ChessPieceType; reason: string }
+    )
     // State that represents the chess piece selected by the player "{ele, col, idx, piece}"
     const [selected, setSelected] = useState(
         null as null | {
@@ -127,7 +128,7 @@ export default function PvAI() {
                                               width: '100%',
                                               height: '100%',
                                           }
-                                        : cell && tie && tiedFor?.id == cell.id
+                                        : cell && tie && tie.piece.id == cell.id
                                           ? {
                                                 ...exposedKingStyle,
                                                 backgroundColor: 'var(--green)',
@@ -466,7 +467,7 @@ export default function PvAI() {
         setTurnCount(1)
         setCoronation(null)
         setWinner(null)
-        setTie(false)
+        setTie(null)
         setSelected(null)
         setValidMoves([])
         setExposed(null)
@@ -508,12 +509,8 @@ export default function PvAI() {
             const playerTied = isTied(board, true)
             const aiTied = isTied(board, false)
 
-            if (playerTied) setTiedFor(repetition.player.piece)
-            else if (aiTied) setTiedFor(repetition.ai.piece)
-
-            const tied = playerTied || aiTied
-
-            if (tied) setTie(true)
+            if (playerTied) setTie(playerTied)
+            else if (aiTied) setTie(aiTied)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
@@ -626,9 +623,16 @@ export default function PvAI() {
 
         for (const move of Object.keys(counters))
             if (counters[move].ct >= 3) {
-                if (counters[move].player) setTiedFor(repetition.player.piece)
-                else setTiedFor(repetition.ai.piece)
-                setTie(true)
+                if (counters[move].player)
+                    setTie({
+                        piece: repetition.player.piece as ChessPieceType,
+                        reason: `Player ${repetition.player.piece?.name} repeated a specific position too many times`,
+                    })
+                else
+                    setTie({
+                        piece: repetition.ai.piece as ChessPieceType,
+                        reason: `AI ${repetition.ai.piece?.name} repeated a specific position too many times`,
+                    })
             }
     }, [
         repetition.ai,
@@ -744,10 +748,7 @@ export default function PvAI() {
                                     ? `The player captured the AI king`
                                     : winner === false
                                       ? `The AI captued the player's king`
-                                      : tie &&
-                                        `The ${
-                                            tiedFor?.player ? 'Player' : 'AI'
-                                        } ${tiedFor?.name} repeated a specific position too many times`}
+                                      : tie && tie.reason}
                             </p>
                             {endBoard}
                             <button onClick={resetBoard}>Try Again</button>

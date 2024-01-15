@@ -220,7 +220,10 @@ export const exposedKing = (
     return null
 }
 
-export const isTied = (board: Board, player: boolean) => {
+export const isTied = (
+    board: Board,
+    player: boolean
+): null | { piece: ChessPieceType; reason: string } => {
     let tied = true
 
     const pieces: SelectedPiece[] = []
@@ -257,5 +260,10 @@ export const isTied = (board: Board, player: boolean) => {
         if (moves.length) tied = false
     }
 
-    return tied
+    if (tied)
+        return {
+            piece: pieces[0].piece,
+            reason: `The ${player ? 'Player' : 'AI'} has no legal moves`,
+        }
+    return null
 }
