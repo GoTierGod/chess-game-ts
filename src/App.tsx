@@ -739,7 +739,7 @@ export default function PvAI() {
                                 : winner === false
                                   ? loserIcon
                                   : tie && tiedIcon}
-                            <p style={{ width: '75%', textAlign: 'center' }}>
+                            <p style={{ width: '65%', textAlign: 'center' }}>
                                 {winner
                                     ? `The player captured the AI king`
                                     : winner === false
