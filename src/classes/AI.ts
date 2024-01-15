@@ -18,6 +18,63 @@ interface Predict {
 export class PlayerAI {
     pieces = players.black
 
+    // Exposing predict
+    // Detect if a piece will have an exposing move after its next move
+    #expPredict = (
+        board: Board,
+        col: string,
+        idx: number,
+        current: SelectedPiece
+    ): { exposing: boolean; exposed: boolean } => {
+        const fantasyBoard = (() => {
+            const mirrorBoard = deepCopy(board)
+
+            mirrorBoard[current.col][current.idx] = null
+            mirrorBoard[col][idx] = current.piece
+
+            return mirrorBoard
+        })()
+
+        const captureMoves = current.piece.getCaptureMoves(
+            fantasyBoard,
+            col,
+            idx
+        )
+
+        for (const move of captureMoves) {
+            const thisCol = getMoveCol(move)
+            const thisIdx = getMoveIdx(move)
+
+            const thisPosition = fantasyBoard[thisCol][thisIdx]
+            if (
+                thisPosition &&
+                thisPosition.player !== current.piece.player &&
+                thisPosition.name === 'King'
+            ) {
+                const kingMoves = thisPosition.moves(thisCol, thisIdx).filter(
+                    (move) =>
+                        !isExposed(
+                            fantasyBoard,
+                            {
+                                col: thisCol,
+                                idx: thisIdx,
+                                piece: thisPosition,
+                            },
+                            { col: getMoveCol(move), idx: getMoveIdx(move) },
+                            thisPosition.player
+                        )
+                )
+
+                return {
+                    exposing: true,
+                    exposed: kingMoves.includes(col + idx),
+                }
+            }
+        }
+
+        return { exposing: false, exposed: false }
+    }
+
     // Defensive move prediction
     #defPredict = (
         board: Board,
@@ -189,63 +246,7 @@ export class PlayerAI {
         return captures
     }
 
-    // Exposing predict
-    // Detect if a piece will have an exposing move after its next move
-    #expPredict = (
-        board: Board,
-        col: string,
-        idx: number,
-        current: SelectedPiece
-    ): { exposing: boolean; exposed: boolean } => {
-        const fantasyBoard = (() => {
-            const mirrorBoard = deepCopy(board)
-
-            mirrorBoard[current.col][current.idx] = null
-            mirrorBoard[col][idx] = current.piece
-
-            return mirrorBoard
-        })()
-
-        const captureMoves = current.piece.getCaptureMoves(
-            fantasyBoard,
-            col,
-            idx
-        )
-
-        for (const move of captureMoves) {
-            const thisCol = getMoveCol(move)
-            const thisIdx = getMoveIdx(move)
-
-            const thisPosition = fantasyBoard[thisCol][thisIdx]
-            if (
-                thisPosition &&
-                thisPosition.player !== current.piece.player &&
-                thisPosition.name === 'King'
-            ) {
-                const kingMoves = thisPosition.moves(thisCol, thisIdx).filter(
-                    (move) =>
-                        !isExposed(
-                            fantasyBoard,
-                            {
-                                col: thisCol,
-                                idx: thisIdx,
-                                piece: thisPosition,
-                            },
-                            { col: getMoveCol(move), idx: getMoveIdx(move) },
-                            thisPosition.player
-                        )
-                )
-
-                return {
-                    exposing: true,
-                    exposed: kingMoves.includes(col + idx),
-                }
-            }
-        }
-
-        return { exposing: false, exposed: false }
-    }
-
+    // Depth prediction alternating defensive and ofensive predictions
     #depthPredict = (
         board: Board,
         col: string,
