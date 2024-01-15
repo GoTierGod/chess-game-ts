@@ -260,7 +260,10 @@ export default function PvAI() {
                               },
                               true
                           ) &&
-                          (nextPosition ? nextPosition.player !== true : true)
+                          (nextPosition
+                              ? nextPosition.player !== true
+                              : true) &&
+                          validMoves.includes(col + idx)
                         : selected.piece
                               .moves(selected.col, selected.idx)
                               .includes(col + idx) ||
