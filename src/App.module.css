@@ -33,7 +33,7 @@
 
 .endBoard {
     min-width: 0;
-    max-width: 425px;
+    max-width: 300px;
 
     overflow: visible;
 }
@@ -159,6 +159,7 @@
 
     padding: 1rem;
     width: fit-content;
+    max-width: 375px;
 
     background: var(--dark);
 

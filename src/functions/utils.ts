@@ -267,3 +267,12 @@ export const isTied = (
         }
     return null
 }
+
+// Count how many times a string is repeated in a list of strings
+export const countIn = (arr: string[], target: string) => {
+    let ct = 0
+
+    arr.forEach((item) => item === target && ct++)
+
+    return ct
+}

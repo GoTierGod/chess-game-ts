@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Board, columns, initialBoard } from './constants/board'
 import { PlayerAI, SelectedPiece } from './classes/AI'
 import {
+    countIn,
     deepCopy,
     exposedKing,
     getMoveCol,
@@ -24,6 +25,8 @@ import {
     exposedKingStyle,
     exposedPieceStyle,
     innerAvailableMoveStyle,
+    innerRepeatedMoveStyle,
+    repeatedMoveStyle,
 } from './constants/styles'
 
 import playerQueenImg from './assets/white/queen.svg'
@@ -697,17 +700,32 @@ export default function PvAI() {
                                         cell.name === 'King'
                                             ? exposedKingStyle
                                             : validMoves.includes(col + idx)
-                                              ? cell
-                                                  ? exposedPieceStyle
-                                                  : availableMoveStyle
+                                              ? selected?.piece.id ===
+                                                    repetition.player.piece
+                                                        ?.id &&
+                                                countIn(
+                                                    repetition.player.moves,
+                                                    col + idx
+                                                ) === 2
+                                                  ? repeatedMoveStyle
+                                                  : cell
+                                                    ? exposedPieceStyle
+                                                    : availableMoveStyle
                                               : { display: 'none' }
                                     }
                                 >
                                     <div
                                         style={
-                                            cell
-                                                ? innerAvailableMoveStyle
-                                                : { display: 'none' }
+                                            selected?.piece.id ===
+                                                repetition.player.piece?.id &&
+                                            countIn(
+                                                repetition.player.moves,
+                                                col + idx
+                                            ) === 2
+                                                ? innerRepeatedMoveStyle
+                                                : cell
+                                                  ? innerAvailableMoveStyle
+                                                  : { display: 'none' }
                                         }
                                     />
                                 </div>
