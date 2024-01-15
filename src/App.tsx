@@ -340,7 +340,7 @@ export default function PvAI() {
             safes: string[]
         } | null
     ) => {
-        if (!turn && !selected && winner === null) {
+        if (!turn && !selected && winner === null && !tie) {
             setTimeout(() => {
                 playerAI.randomAction(
                     safe,
