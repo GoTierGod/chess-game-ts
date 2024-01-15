@@ -35,7 +35,7 @@ import timesImg from './assets/others/times-svgrepo-com.svg'
 import handshakeImg from './assets/others/hand-shake-svgrepo-com.svg'
 
 export interface repetition {
-    id: null | number
+    piece: ChessPieceType | null
     moves: string[]
 }
 
@@ -65,10 +65,15 @@ const winnerIcon = <img src={winnersCupImg} alt="Winner's Cup" />
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
+    const [tiedFor, setTiedFor] = useState(null as null | ChessPieceType)
     const [repetition, setRepetition] = useState({
-        ai: { id: null, moves: [] },
-        player: { id: null, moves: [] },
+        ai: { piece: null, moves: [] },
+        player: { piece: null, moves: [] },
     } as { ai: repetition; player: repetition })
+    // State that represents the current board state, initially set to "initialBoard"
+    const [board, setBoard] = useState(initialBoard as Board)
+    // State that determines if is the player turn (true) or AI turn (false)
+    const [turn, setTurn] = useState(true)
     // Counter that determines the current number of turns
     const [turnCount, setTurnCount] = useState(1)
     // State that stores a pawn available for coronation
@@ -77,10 +82,6 @@ export default function PvAI() {
     const [winner, setWinner] = useState(null as null | boolean)
     // State that determines if there's a tie
     const [tie, setTie] = useState(false)
-    // State that represents the current board state, initially set to "initialBoard"
-    const [board, setBoard] = useState(initialBoard as Board)
-    // State that determines if is the player turn (true) or AI turn (false)
-    const [turn, setTurn] = useState(true)
     // State that represents the chess piece selected by the player "{ele, col, idx, piece}"
     const [selected, setSelected] = useState(
         null as null | {
@@ -102,6 +103,63 @@ export default function PvAI() {
     )
     // Player king ref
     const playerKingRef = useRef(null as null | HTMLDivElement)
+
+    const endBoard = (
+        <div className={style.endBoard}>
+            {columns.map((col) => (
+                <div key={col} className={style.endCol}>
+                    {board[col].map((cell, idx) => (
+                        <div
+                            key={idx}
+                            className={style.endCell}
+                            style={{ position: 'relative' }}
+                        >
+                            <div
+                                style={
+                                    cell &&
+                                    cell.name === 'King' &&
+                                    !tie &&
+                                    exposed &&
+                                    exposed.king.piece.id === cell.id
+                                        ? {
+                                              ...exposedKingStyle,
+                                              backgroundColor: 'var(--green)',
+                                              width: '100%',
+                                              height: '100%',
+                                          }
+                                        : cell && tie && tiedFor?.id == cell.id
+                                          ? {
+                                                ...exposedKingStyle,
+                                                backgroundColor: 'var(--green)',
+                                                width: '100%',
+                                                height: '100%',
+                                            }
+                                          : { display: 'none' }
+                                }
+                            >
+                                <div
+                                    style={
+                                        cell
+                                            ? {
+                                                  ...innerAvailableMoveStyle,
+                                              }
+                                            : { display: 'none' }
+                                    }
+                                />
+                            </div>
+                            {cell && (
+                                <img
+                                    src={cell.image.src}
+                                    alt={cell.image.alt}
+                                    style={{ zIndex: '10' }}
+                                />
+                            )}
+                        </div>
+                    ))}
+                </div>
+            ))}
+        </div>
+    )
 
     // Method - Main function for player actions
     const playerAction = (
@@ -227,7 +285,7 @@ export default function PvAI() {
                     selected.ele.style.border = ''
                     selected.ele.style.backgroundColor = ''
 
-                    addRepetition(selected.piece.id, col + idx, true)
+                    addRepetition(selected.piece, col + idx, true)
 
                     setValidMoves([])
                     setSelected(null)
@@ -260,7 +318,7 @@ export default function PvAI() {
             selected.ele.style.border = ''
             selected.ele.style.backgroundColor = ''
 
-            addRepetition(selected.piece.id, col + idx, true)
+            addRepetition(selected.piece, col + idx, true)
 
             setValidMoves([])
             setSelected(null)
@@ -351,9 +409,13 @@ export default function PvAI() {
     }
 
     // Method - Add a move repetition
-    const addRepetition = (pieceId: number, move: string, player: boolean) => {
+    const addRepetition = (
+        piece: ChessPieceType,
+        move: string,
+        player: boolean
+    ) => {
         if (player) {
-            if (repetition.player.id === pieceId)
+            if (repetition.player.piece?.id === piece.id)
                 setRepetition((prevRepetition) => {
                     return {
                         ...prevRepetition,
@@ -368,13 +430,13 @@ export default function PvAI() {
                     return {
                         ...prevRepetition,
                         player: {
-                            id: pieceId,
+                            piece: piece,
                             moves: [move],
                         },
                     }
                 })
         } else {
-            if (repetition.ai.id === pieceId)
+            if (repetition.ai.piece?.id === piece.id)
                 setRepetition((prevRepetition) => {
                     return {
                         ...prevRepetition,
@@ -389,7 +451,7 @@ export default function PvAI() {
                     return {
                         ...prevRepetition,
                         ai: {
-                            id: pieceId,
+                            piece: piece,
                             moves: [move],
                         },
                     }
@@ -398,7 +460,23 @@ export default function PvAI() {
     }
 
     // Method - Reset the game
-    const resetBoard = () => location.reload()
+    const resetBoard = () => {
+        setBoard(initialBoard)
+        setTurn(true)
+        setTurnCount(1)
+        setCoronation(null)
+        setWinner(null)
+        setTie(false)
+        setSelected(null)
+        setValidMoves([])
+        setExposed(null)
+
+        const element = playerKingRef.current
+        if (element) {
+            element.style.border = ''
+            element.style.backgroundColor = ''
+        }
+    }
 
     // Change turn
     useEffect(() => {
@@ -427,9 +505,15 @@ export default function PvAI() {
     // Detect a tie
     useEffect(() => {
         if (turnCount !== 1) {
-            const tied = isTied(board, true) || isTied(board, false)
+            const playerTied = isTied(board, true)
+            const aiTied = isTied(board, false)
 
-            tied && setTie(true)
+            if (playerTied) setTiedFor(repetition.player.piece)
+            else if (aiTied) setTiedFor(repetition.ai.piece)
+
+            const tied = playerTied || aiTied
+
+            if (tied) setTie(true)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
@@ -522,26 +606,36 @@ export default function PvAI() {
 
     // Detect tied for repetitions
     useEffect(() => {
-        const counters: { [key: string]: number } = {}
+        const counters: { [key: string]: { player: boolean; ct: number } } = {}
 
         repetition.player.moves.forEach(
-            (move) => (counters[move] = (counters[move] || 0) + 1)
+            (move) =>
+                (counters[move] = {
+                    player: true,
+                    ct: (counters[move]?.ct || 0) + 1,
+                })
         )
 
         repetition.ai.moves.forEach(
-            (move) => (counters[move] = (counters[move] || 0) + 1)
+            (move) =>
+                (counters[move] = {
+                    player: false,
+                    ct: (counters[move]?.ct || 0) + 1,
+                })
         )
 
         for (const move of Object.keys(counters))
-            if (counters[move] >= 3) {
+            if (counters[move].ct >= 3) {
+                if (counters[move].player) setTiedFor(repetition.player.piece)
+                else setTiedFor(repetition.ai.piece)
                 setTie(true)
             }
     }, [
         repetition.ai,
-        repetition.ai.id,
+        repetition.ai.piece,
         repetition.ai.moves,
         repetition.player,
-        repetition.player.id,
+        repetition.player.piece,
         repetition.player.moves,
     ])
 
@@ -645,6 +739,17 @@ export default function PvAI() {
                                 : winner === false
                                   ? loserIcon
                                   : tie && tiedIcon}
+                            <p style={{ width: '75%', textAlign: 'center' }}>
+                                {winner
+                                    ? `The player captured the AI king`
+                                    : winner === false
+                                      ? `The AI captued the player's king`
+                                      : tie &&
+                                        `The ${
+                                            tiedFor?.player ? 'Player' : 'AI'
+                                        } ${tiedFor?.name} repeated a specific position too many times`}
+                            </p>
+                            {endBoard}
                             <button onClick={resetBoard}>Try Again</button>
                         </article>
                     )}

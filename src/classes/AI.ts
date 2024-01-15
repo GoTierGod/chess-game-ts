@@ -320,7 +320,11 @@ export class PlayerAI {
         coronation: SelectedPiece | null,
         toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void,
         repetition: { ai: repetition; player: repetition },
-        addRepetition: (pieceId: number, move: string, player: boolean) => void
+        addRepetition: (
+            piece: ChessPieceType,
+            move: string,
+            player: boolean
+        ) => void
     ) => {
         // Remaining AI (enemy) pieces on the board
         const remaining = columns
@@ -379,7 +383,10 @@ export class PlayerAI {
                     ranking.sort((a, b) => b.score - a.score)
                     const avoidRepeat: string[] = []
 
-                    if (repetition.ai.id && repetition.ai.moves.length >= 2) {
+                    if (
+                        repetition.ai.piece?.id &&
+                        repetition.ai.moves.length >= 2
+                    ) {
                         const counters: { [key: string]: number } = {}
 
                         repetition.ai.moves.forEach(
@@ -395,7 +402,8 @@ export class PlayerAI {
 
                     const avoidRepetition = () => {
                         if (
-                            ranking[0].selected.piece.id === repetition.ai.id &&
+                            ranking[0].selected.piece.id ===
+                                repetition.ai.piece?.id &&
                             avoidRepeat.includes(ranking[0].move)
                         ) {
                             if (ranking.length > 1) {
@@ -413,7 +421,7 @@ export class PlayerAI {
                     const idx = getMoveIdx(bestRanked.move)
 
                     addRepetition(
-                        bestRanked.selected.piece.id,
+                        bestRanked.selected.piece,
                         bestRanked.move,
                         false
                     )
@@ -571,7 +579,10 @@ export class PlayerAI {
                     // console.log(`Score: ${ranking[0].score}`)
                     const avoidRepeat: string[] = []
 
-                    if (repetition.ai.id && repetition.ai.moves.length >= 2) {
+                    if (
+                        repetition.ai.piece?.id &&
+                        repetition.ai.moves.length >= 2
+                    ) {
                         const counters: { [key: string]: number } = {}
 
                         repetition.ai.moves.forEach(
@@ -587,7 +598,8 @@ export class PlayerAI {
 
                     const avoidRepetition = () => {
                         if (
-                            ranking[0].selected.piece.id === repetition.ai.id &&
+                            ranking[0].selected.piece.id ===
+                                repetition.ai.piece?.id &&
                             avoidRepeat.includes(ranking[0].move)
                         ) {
                             if (ranking.length > 1) {
@@ -605,7 +617,7 @@ export class PlayerAI {
                     const idx = getMoveIdx(bestRanked.move)
 
                     addRepetition(
-                        bestRanked.selected.piece.id,
+                        bestRanked.selected.piece,
                         bestRanked.move,
                         false
                     )

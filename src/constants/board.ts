@@ -14,8 +14,8 @@ export const columns: string[] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 // Player pieces
 export const players = {
     white: {
-        king: new King(true, 2),
-        queen: new Queen(true, 1),
+        king: new King(true, 1),
+        queen: new Queen(true, 2),
         Bishop1: new Bishop(true, 3),
         Bishop2: new Bishop(true, 4),
         knight1: new Knight(true, 5),
