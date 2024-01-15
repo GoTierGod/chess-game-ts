@@ -353,11 +353,13 @@ export class PlayerAI {
                     const [colA, idxA] = [getMoveCol(a), getMoveIdx(a)]
                     const [colB, idxB] = [getMoveCol(b), getMoveIdx(b)]
 
-                    const positionA = board[colA][idxA] as ChessPieceType
-                    const positionB = board[colB][idxB] as ChessPieceType
+                    const positionA = board[colA][idxA]
+                    const positionB = board[colB][idxB]
 
-                    if (positionA.value > positionB.value) return -1
-                    else if (positionA.value < positionB.value) return 1
+                    if (positionA && positionB) {
+                        if (positionA.value > positionB.value) return -1
+                        else if (positionA.value < positionB.value) return 1
+                    }
                     return 0
                 })
 
