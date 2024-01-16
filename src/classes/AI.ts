@@ -301,26 +301,18 @@ export class PlayerAI {
 
     // Perform a random action (move)
     randomAction = (
-        safe: boolean,
         board: Board,
+        coronation: SelectedPiece | null,
+        repetition: { ai: repetition; player: repetition },
+        safe: boolean,
         exposed: null | {
             king: SelectedPiece
             captures: SelectedPiece[]
             safes: string[]
         },
         setBoard: React.Dispatch<React.SetStateAction<Board>>,
-        setSelected: React.Dispatch<
-            React.SetStateAction<{
-                ele: HTMLDivElement
-                col: string
-                idx: number
-                piece: ChessPieceType
-            } | null>
-        >,
         setTurnCount: React.Dispatch<React.SetStateAction<number>>,
-        coronation: SelectedPiece | null,
         toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void,
-        repetition: { ai: repetition; player: repetition },
         addRepetition: (
             piece: ChessPieceType,
             move: string,
@@ -641,9 +633,6 @@ export class PlayerAI {
         // Invoke the correct function
         if (safe) safeMoveAction()
         else moveAction()
-
-        setSelected(null)
-        // setTurn(true)
 
         setTurnCount((prevTurnCount) => prevTurnCount + 1)
 

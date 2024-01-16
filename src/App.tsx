@@ -293,10 +293,6 @@ export default function PvAI() {
                     selected.ele.style.backgroundColor = ''
 
                     addRepetition(selected.piece, col + idx, true)
-
-                    setValidMoves([])
-                    setSelected(null)
-                    // setTurn(false)
                     setTurnCount((prevTurnCount) => prevTurnCount + 1)
                 }
             }
@@ -326,11 +322,7 @@ export default function PvAI() {
             selected.ele.style.backgroundColor = ''
 
             addRepetition(selected.piece, col + idx, true)
-
-            setValidMoves([])
-            setSelected(null)
-            // setTurn(false)
-            setExposed(null)
+            setTurnCount((prevTurnCount) => prevTurnCount + 1)
         }
     }
 
@@ -346,15 +338,14 @@ export default function PvAI() {
         if (!turn && !selected && winner === null && !tie) {
             setTimeout(() => {
                 playerAI.randomAction(
-                    safe,
                     board,
+                    coronation,
+                    repetition,
+                    safe,
                     exposed,
                     setBoard,
-                    setSelected,
                     setTurnCount,
-                    coronation,
                     toCrown,
-                    repetition,
                     addRepetition
                 )
             }, 150)
@@ -485,9 +476,15 @@ export default function PvAI() {
         }
     }
 
-    // Change turn
+    // Change turn and reset valid moves, selected and exposed
     useEffect(() => {
-        if (turnCount !== 1) setTurn((prevTurn) => !prevTurn)
+        if (turnCount !== 1) {
+            setTurn((prevTurn) => !prevTurn)
+
+            setValidMoves([])
+            setSelected(null)
+            setExposed(null)
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [board])
 
