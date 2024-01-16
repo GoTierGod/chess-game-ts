@@ -5,10 +5,13 @@ This is a chess game in which the player plays against an AI.
 ## Table of Contents
 
 -   [1. Setup](#setup)
--   [2. AI Algorithm](#ai-algorithm)
--   [3. AI Methods](#ai-methods)
--   [4. Contributing](#contributing)
--   [5. License](#license)
+-   [2. Development](#development)
+-   [3. Build](#build)
+-   [4. Deployment](#deployment)
+-   [5. AI Algorithm](#ai-algorithm)
+-   [6. AI Methods](#ai-methods)
+-   [7. Contributing](#contributing)
+-   [8. License](#license)
 
 ## Setup
 
@@ -31,6 +34,30 @@ To set up the project, follow these steps:
     ```bash
     npm install
     ```
+
+## Development
+
+To start the development server, run the following command:
+
+```bash
+npm run dev
+```
+
+This will launch the application in development mode. You can access it at `http://localhost:5173`.
+
+## Build
+
+To build the project for production, run the following command:
+
+```bash
+npm run build
+```
+
+The build artifacts will be generated in the `dist` directory.
+
+## Deployment
+
+To deploy the application, you can use any static hosting service of your choice. Simply upload the contents of the `dist` directory to your hosting provider.
 
 ## AI Algorithm
 
