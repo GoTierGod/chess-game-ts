@@ -34,22 +34,27 @@ export class PlayerAI {
             return mirrorBoard
         })()
 
+        // Piece capture moves
         const captureMoves = current.piece.getCaptureMoves(
             fantasyBoard,
             next.col,
             next.idx
         )
 
+        // Loop through capture moves
         for (const move of captureMoves) {
             const thisCol = getMoveCol(move)
             const thisIdx = getMoveIdx(move)
 
             const thisPosition = fantasyBoard[thisCol][thisIdx]
+
+            // If from this position the piece can expose the enemy king
             if (
                 thisPosition &&
                 thisPosition.player !== current.piece.player &&
                 thisPosition.name === 'King'
             ) {
+                // Enemy king moves
                 const kingMoves = thisPosition.moves(thisCol, thisIdx).filter(
                     (move) =>
                         !isExposed(
@@ -65,13 +70,20 @@ export class PlayerAI {
                 )
 
                 return {
+                    // The enemy king is exposed
                     exposing: true,
+                    // Detect if the piece is exposed
                     exposed: kingMoves.includes(next.col + next.idx),
                 }
             }
         }
 
-        return { exposing: false, exposed: false }
+        return {
+            // The enemy king is not exposed
+            exposing: false,
+            // The piece is not exposed
+            exposed: false,
+        }
     }
 
     // Defensive move prediction
@@ -276,7 +288,7 @@ export class PlayerAI {
         return captures
     }
 
-    // Deep prediction alternating defensive and ofensive predictions
+    // Deep prediction alternating defensive and offensive predictions
     #deepPredict = (
         board: Board,
         next: PieceCoords,
@@ -323,7 +335,7 @@ export class PlayerAI {
         return score
     }
 
-    // Perform a random action (move)
+    // Perform a random move
     randomAction = (
         board: Board,
         coronation: SelectedPiece | null,
@@ -343,7 +355,7 @@ export class PlayerAI {
             player: boolean
         ) => void
     ) => {
-        // Remaining AI (enemy) pieces on the board
+        // Remaining AI pieces on the board
         const remaining = columns
             .map((col) => {
                 let ct = 0
@@ -461,10 +473,9 @@ export class PlayerAI {
             }
         }
 
-        // Move function
+        // Standard move action
         const moveAction = () => {
             if (blacklist.length < remaining) {
-                // 1. Choose a piece
                 const selectRandomPiece = (): SelectedPiece => {
                     const col =
                         columns[
@@ -488,7 +499,6 @@ export class PlayerAI {
                 const selected: SelectedPiece = selectRandomPiece()
 
                 if (selected) {
-                    // 2. Identify valid standard moves
                     let moves = selected.piece
                         .moves(selected.col, selected.idx)
                         .filter(
@@ -514,7 +524,6 @@ export class PlayerAI {
                         )
                     }
 
-                    //3. Identify capture moves
                     let capMoves = selected.piece
                         .getCaptureMoves(board, selected.col, selected.idx)
                         .sort((a, b) => {
@@ -548,8 +557,6 @@ export class PlayerAI {
                         )
                     }
 
-                    // 4. Rank moves
-                    // Capture moves
                     if (capMoves.length) {
                         for (const move of capMoves) {
                             const col = getMoveCol(move)
@@ -584,18 +591,13 @@ export class PlayerAI {
                         }
                     }
 
-                    // 5. Blacklist the piece and try a different one
                     blacklist.push(selected.piece.id)
                     moveAction()
                 }
             } else {
-                // 6. Make the move with the highest score
                 if (ranking.length) {
                     ranking.sort((a, b) => b.score - a.score)
                     const avoidRepeat: string[] = []
-                    // console.log(ranking[0].score)
-                    // console.log(`Score: ${ranking[0].score}`)
-                    // console.log(ranking.length)
 
                     if (
                         repetition.ai.piece?.id &&
@@ -657,7 +659,6 @@ export class PlayerAI {
             }
         }
 
-        // Invoke the correct function
         if (safe) safeMoveAction()
         else moveAction()
 
