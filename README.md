@@ -70,7 +70,7 @@ This algorithm defines a function called `safeMoveAction` that computes a safe m
 
 4. **Iterate Over Safe Moves**:
 
-    - For each safe move, calculate a score using the `depthPredict` method.
+    - For each safe move, calculate a score using the `deepPredict` method.
     - Create a ranking object with information about the selected piece, the move, and the calculated score.
 
 5. **Sort Ranking**: Sort the ranking in descending order based on the calculated scores.
@@ -127,7 +127,7 @@ This algorithm defines a function called `moveAction` that perform the movement 
 
 5. **Rank Moves**:
 
-    - For both standard and capture moves, calculate a score for each move using the `depthPredict` method.
+    - For both standard and capture moves, calculate a score for each move using the `deepPredict` method.
     - Create a ranking object for each move, including information about the selected piece, the move, and the calculated score.
     - Add ranking objects to the global `ranking` array.
 
@@ -291,7 +291,7 @@ This algorithm defines a method called `#ofPredict`, which is used for offensive
 
 ### `#deepPredict` Method
 
-This algorithm defines a method called `#depthPredict`, which performs alternating defensive and offensive move predictions to determine the overall score for a given board position. It recursively evaluates the consequences of potential moves, considering both defensive and offensive aspects.
+This algorithm defines a method called `#deepPredict`, which performs alternating defensive and offensive move predictions to determine the overall score for a given board position. It recursively evaluates the consequences of potential moves, considering both defensive and offensive aspects.
 
 #### Input Parameters
 
@@ -333,7 +333,7 @@ This algorithm defines a method called `#depthPredict`, which performs alternati
 
 6. **Recursive Call for Offensive Predictions**:
 
-    - If there is an offensive prediction, recursively call `#depthPredict` with the last offensive prediction's target position, selected piece, and updated score.
+    - If there is an offensive prediction, recursively call `#deepPredict` with the last offensive prediction's target position, selected piece, and updated score.
 
 7. **Return Final Score**:
     - Return the final calculated score for the given board position.
