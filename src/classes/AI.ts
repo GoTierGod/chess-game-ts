@@ -145,7 +145,7 @@ export class PlayerAI {
                                 col: getMoveCol(move),
                                 idx: getMoveIdx(move),
                             },
-                            false
+                            true
                         )
                 )
             }
