@@ -593,7 +593,7 @@ export class PlayerAI {
                 if (ranking.length) {
                     ranking.sort((a, b) => b.score - a.score)
                     const avoidRepeat: string[] = []
-                    console.log(ranking[0].score)
+                    // console.log(ranking[0].score)
                     // console.log(`Score: ${ranking[0].score}`)
                     // console.log(ranking.length)
 
