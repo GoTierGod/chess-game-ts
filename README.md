@@ -6,7 +6,7 @@ This is a chess game in which the player plays against an AI.
 
 -   **Behavior:** Offensive.
 -   **Operational Description:** The algorithm employs an offensive strategy by iteratively assessing potential moves for each AI piece. It integrates both defensive and offensive predictions, simulating the consequences of the AI's own moves and anticipating the responses from the opponent following the evaluation of a given move.
--   **Prediction Horizon:** At the beginning of the match, the AI shows its ability to anticipate, making between 25 and 50 deep predictions, each of which covers hundreds of possible subsequent moves for each considered own move. This forecast gradually decreases as pieces are captured during the course of the game, aligning with the reduction in the total number of feasible moves.
+-   **Prediction Horizon:** The AI shows its ability to anticipate, making up to 64 depth predictions (128 subsequent movements) for each possible own movement. This forecast gradually decreases as pieces are captured over the course of the game, aligning with the reduction in the total number of feasible moves.
 
 ### `randomAction` Method
 
@@ -18,7 +18,6 @@ This algorithm defines a function called `randomAction` that performs a random m
 -   `board`: The current state of the chessboard.
 -   `exposed`: Information about exposed pieces on the board, including the king, captures, and safe moves.
 -   `setBoard`: React state setter for updating the chessboard.
--   `setSelected`: React state setter for updating the selected piece.
 -   `setTurnCount`: React state setter for updating the turn count.
 -   `coronation`: Information about a selected piece for coronation (promotion to a higher piece).
 -   `toCrown`: Function to perform the coronation action based on the selected piece.
@@ -60,7 +59,7 @@ This algorithm defines a function called `safeMoveAction` that computes a safe m
 
 -   None (but it updates the game state and board)
 
-### Algorithm Steps
+#### Algorithm Steps
 
 1. **Check for Exposure**: If the player's king is exposed, proceed with the safe move calculation.
 
@@ -105,7 +104,7 @@ This algorithm defines a function called `moveAction` that perform the movement 
 
 -   None (but it updates the game state and board)
 
-### Algorithm Steps
+#### Algorithm Steps
 
 1. **Check Blacklist Limit**: Ensure that the blacklist of pieces to avoid is not exceeding the remaining pieces.
 
@@ -153,14 +152,13 @@ This algorithm defines a function called `moveAction` that perform the movement 
 
 ### `#expPredict` Method
 
-This algorithm defines a method called `#expPredict`, which is used to predict whether a move will expose the opponent's king after the next move. It simulates the potential move on a fantasy board and checks if any capture moves by the current piece will expose the opponent's king, allowing it to capture the piece that is exposing it.
+This algorithm implements the `#expPredict` method, designed to predict whether a chess move will expose the opponent's king after the next move. The method takes into account the current state of the chessboard, the potential move's coordinates, and information about the selected piece making the move.
 
 #### Input Parameters
 
 -   `board`: The current state of the chessboard.
--   `col`: The column of the potential move.
--   `idx`: The index of the potential move.
--   `current`: Information about the selected piece making the move, including its current position and piece type.
+-   `next`: The coordinates of the potential move, including the column (`col`) and index (`idx`).
+-   `current`: Information about the selected piece making the move, including its current position (`col` and `idx`) and piece type.
 
 #### Output
 
@@ -168,16 +166,16 @@ This algorithm defines a method called `#expPredict`, which is used to predict w
     -   `exposing`: Indicates whether the move will expose the opponent's king.
     -   `exposed`: Indicates whether the opponent's king can capture the piece that is exposing it.
 
-### Algorithm Steps
+#### Algorithm Steps
 
 1. **Create a Fantasy Board**:
 
-    - Create a deep copy of the current chessboard (`mirrorBoard`) to simulate the potential move.
+    - Create a deep copy (`mirrorBoard`) of the current chessboard to simulate the potential move.
     - Update the fantasy board by removing the selected piece from its current position and placing it in the potential move position.
 
 2. **Get Capture Moves of the Current Piece**:
 
-    - Use the `getCaptureMoves` method of the current piece to retrieve all possible capture moves from the potential move position.
+    - Utilize the `getCaptureMoves` method of the current piece to obtain all possible capture moves from the potential move position.
 
 3. **Check for Exposing Moves**:
 
@@ -192,148 +190,152 @@ This algorithm defines a method called `#expPredict`, which is used to predict w
     - Return an object with information about whether the move is exposing (`true`/`false`) and whether the king can capture the piece (`true`/`false`).
 
 5. **Return Prediction**:
-    - Return an object containing the exposing and exposed properties.
+
+    - Return an object containing the `exposing` and `exposed` properties, indicating whether the move will expose the opponent's king and whether the king can capture the piece that is exposing it, respectively.
 
 ### `#defPredict` Method
 
-This algorithm defines a method called `#defPredict` which is used for defensive move prediction in a chess-playing system. It evaluates the potential captures of the AI piece by surrounding enemy pieces and predicts the consequences of defensive moves.
+This algorithm defines the `#defPredict` method, aimed at predicting defensive moves by evaluating potential capture moves of the opponent's pieces. The method considers the current state of the chessboard, the coordinates of the potential move, information about the selected piece making the move, and the type of piece that might be captured (`eaten`).
 
 #### Input Parameters
 
 -   `board`: The current state of the chessboard.
--   `col`: The column of the potential move.
--   `idx`: The index of the potential move.
--   `current`: Information about the AI piece making the move, including its current position and piece type.
--   `eaten`: The piece that would be captured in the defensive move (null if no capture).
+-   `next`: The coordinates of the potential move, including the column (`col`) and index (`idx`).
+-   `current`: Information about the selected piece making the move, including its current position (`col` and `idx`) and piece type.
+-   `eaten`: The type of piece that might be captured (`null` if no piece is targeted).
 
 #### Output
 
--   An array of `Predict` objects, each containing information about an enemy piece and the predicted consequences of capturing the AI piece.
+-   An array of `Predict` objects, each containing information about the opponent's piece, the potential capture move, and a score indicating the desirability of the move for defensive purposes.
 
-### Algorithm Steps
+#### Algorithm Steps
 
 1. **Create a Fantasy Board**:
 
-    - Create a deep copy of the current chessboard (`mirrorBoard`) to simulate the potential move.
-    - Update the fantasy board by removing the AI piece from its current position and placing it in the potential move position.
+    - Create a deep copy (`mirrorBoard`) of the current chessboard to simulate the potential move.
+    - Update the fantasy board by removing the selected piece from its current position and placing it in the potential move position.
 
-2. **Initialize a Queen for All-Around Enemies**:
+2. **Identify All Around Enemies**:
 
-    - Create a new instance of the Queen piece for the AI player (false indicates that it's not a player's piece) to conveniently identify all enemy positions around the potential move.
+    - Use a queen instance for convenience to identify all around enemies from the potential move position.
+    - Locate enemy knights on the board and add their positions to the list of all around enemies.
 
-3. **Identify All Around Enemy Positions**:
+3. **Capture Moves Evaluation**:
 
-    - Use the queen instance to get all possible capture moves around the potential move position.
+    - Iterate through each enemy position in the all around enemies list.
+    - For each enemy position, identify the column (`thisCol`) and index (`thisIdx`) of the enemy piece.
+    - Retrieve capture moves for the enemy piece using its `getCaptureMoves` method.
+    - If the enemy piece is a king, filter out moves that expose the king using the `isExposed` method.
 
-4. **Evaluate Capture Moves of Surrounding Enemies**:
+4. **Evaluate Exposing Predictions**:
 
-    - Iterate through the positions of all-around enemies.
-    - For each enemy position, identify the piece at that position and its possible capture moves.
-    - Check if the AI piece can be captured by any of these moves.
+    - Check if the enemy can capture the AI piece in the potential move.
+    - Utilize the `#expPredict` method to predict whether the move will expose the opponent's king.
 
-5. **Defensive Exposing Prediction**:
+5. **Score Calculation**:
 
-    - For each capturing enemy, predict the consequences of the defensive move:
-        - Use the `#expPredict` method to check if the defensive move exposes the AI king.
-        - Calculate the score based on whether the move exposes the king or not.
-        - If exposing, assign a negative score; otherwise, assign the value of the captured piece minus the value of the AI piece.
+    - Assign a score to each potential defensive move based on exposing predictions, the type of piece being captured (`eaten`), and the value of the selected piece making the move.
+    - Negative scores are assigned if the move exposes the enemy king without exposing the AI piece. Otherwise, positive scores are assigned based on the value of the piece being captured.
 
 6. **Return Predictions**:
-    - Return an array of `Predict` objects, each containing information about an enemy piece and the predicted consequences of capturing the AI piece.
+
+    - Return an array of `Predict` objects, each containing information about the opponent's piece, the potential capture move, and the calculated score.
 
 ### `#ofPredict` Method
 
-This algorithm defines a method called `#ofPredict`, which is used for offensive move prediction in a chess-playing system. It evaluates the potential captures of the opponent's piece by surrounding ally pieces and predicts the consequences of offensive moves.
+This algorithm defines the `#ofPredict` method, focused on predicting offensive moves by evaluating potential capture moves of the opponent's pieces. The method considers the current state of the chessboard, the coordinates of the potential move, information about the selected piece making the move, and the piece that might capture the AI piece (`eater`).
 
 #### Input Parameters
 
 -   `board`: The current state of the chessboard.
--   `col`: The column of the potential move.
--   `idx`: The index of the potential move.
--   `current`: Information about the selected piece making the move, including its current position and piece type.
--   `eater`: The piece that would be capturing the AI piece.
+-   `next`: The coordinates of the potential move, including the column (`col`) and index (`idx`).
+-   `current`: Information about the selected piece making the move, including its current position (`col` and `idx`) and piece type.
+-   `eater`: Information about the piece that might capture the AI piece, including its current position (`col` and `idx`) and piece type.
 
 #### Output
 
--   An array of `Predict` objects, each containing information about an ally piece and the predicted consequences of capturing the AI piece.
+-   An array of `Predict` objects, each containing information about the opponent's piece, the potential capture move, and a score indicating the desirability of the move for offensive purposes.
 
-### Algorithm Steps
+#### Algorithm Steps
 
 1. **Create a Fantasy Board**:
 
-    - Create a deep copy of the current chessboard (`mirrorBoard`) to simulate the potential move.
-    - Update the fantasy board by removing the selected piece from its current position and placing it in the potential move position.
+    - Create a deep copy (`mirrorBoard`) of the current chessboard to simulate the potential move.
+    - Update the fantasy board by removing the selected piece making the move (`current.piece`) and the potential capturing piece (`eater.piece`) from their current positions and placing the latter in the potential move position.
 
-2. **Initialize a Queen for All-Around Allies**:
+2. **Identify All Around Allies**:
 
-    - Create a new instance of the Queen piece for the opponent's player (true indicates that it's a player's piece) to conveniently identify all ally positions around the potential move.
+    - Use a queen instance for convenience to identify all around allies from the potential move position.
+    - Locate ally knights on the board and add their positions to the list of all around allies.
 
-3. **Identify All Around Ally Positions**:
+3. **Capture Moves Evaluation**:
 
-    - Use the queen instance to get all possible capture moves around the potential move position.
-    - Locate ally knights on the fantasy board and add their positions to the `allAround` array.
+    - Iterate through each ally position in the all around allies list.
+    - For each ally position, identify the column (`thisCol`) and index (`thisIdx`) of the ally piece.
+    - Retrieve capture moves for the ally piece using its `getCaptureMoves` method.
+    - If the ally piece is a king, filter out moves that expose the king using the `isExposed` method.
 
-4. **Evaluate Capture Moves of Surrounding Allies**:
+4. **Evaluate Exposing Predictions**:
 
-    - Iterate through the positions of all-around allies.
-    - For each ally position, identify the piece at that position and its possible capture moves.
-    - Check if the opponent's piece can be captured by any of these moves.
+    - Check if the ally can capture the AI piece in the potential move.
+    - Utilize the `#expPredict` method to predict whether the move will expose the AI king.
 
-5. **Defensive Exposing Prediction**:
+5. **Score Calculation**:
 
-    - For each capturing ally, predict the consequences of the offensive move:
-        - Use the `#expPredict` method to check if the offensive move exposes the opponent's king.
-        - Calculate the score based on whether the move exposes the king or not.
-        - If exposing, assign a positive score; otherwise, assign the value of the captured piece minus the value of the opponent's piece.
+    - Assign a score to each potential offensive move based on exposing predictions, the type of piece that might capture the AI piece (`eater`), and the value of the selected piece making the move.
+    - Positive scores are assigned if the move exposes the AI king without exposing the ally piece. Otherwise, negative scores are assigned based on the value of the piece that might capture the AI piece.
 
 6. **Return Predictions**:
-    - Return an array of `Predict` objects, each containing information about an ally piece and the predicted consequences of capturing the AI piece.
+
+    - Return an array of `Predict` objects, each containing information about the opponent's piece, the potential capture move, and the calculated score.
 
 ### `#deepPredict` Method
 
-This algorithm defines a method called `#deepPredict`, which performs alternating defensive and offensive move predictions to determine the overall score for a given board position. It recursively evaluates the consequences of potential moves, considering both defensive and offensive aspects.
+This algorithm defines the `#deepPredict` method, which alternates between defensive and offensive predictions to deeply analyze the potential consequences of a the AI own moves. The method considers the current state of the chessboard, the coordinates of the potential move, information about the selected piece making the move, and optional parameters for previous scores and deep levels.
 
 #### Input Parameters
 
 -   `board`: The current state of the chessboard.
--   `col`: The column of the potential move.
--   `idx`: The index of the potential move.
--   `selected`: Information about the selected piece making the move, including its current position and piece type.
--   `prevScore`: The accumulated score from previous predictions, initialized as `null` or a previous score.
+-   `next`: The coordinates of the potential move, including the column (`col`) and index (`idx`).
+-   `selected`: Information about the selected piece making the move, including its current position (`col` and `idx`) and piece type.
+-   `prevScore`: The previous cumulative score from earlier predictions (default is `null`).
+-   `prevDeep`: The previous deep level in the prediction sequence (default is `null`).
 
 #### Output
 
--   The overall score for the given board position, considering both defensive and offensive move predictions.
+-   A cumulative score indicating the desirability of the sequence of moves.
 
-### Algorithm Steps
+#### Algorithm Steps
 
-1. **Initialize Score and Identify Eaten Piece**:
+1. **Initialize Variables**:
 
-    - Initialize the `score` variable with the provided `prevScore` or 0.
-    - Determine if there is a piece at the potential move position (`eaten`).
+    - Set the initial score and deep level based on the provided or default values.
+    - Identify the piece that might be captured (`eaten`) in the potential move.
 
 2. **Defensive Prediction**:
 
-    - Perform defensive move prediction using the `#defPredict` method, sorting the predictions from lower to higher based on the value of the capturing pieces.
-    - Select the first (lowest value) defensive prediction (pessimistic choice).
+    - Use the `#defPredict` method to predict defensive moves, sorting them from lower to higher values (pessimistic expectation).
 
 3. **Offensive Prediction**:
 
-    - If there is a defensive prediction, perform offensive move prediction using the `#ofPredict` method, sorting the predictions from higher to lower based on the value of the capturing pieces (optimistic choice).
-    - If no defensive prediction, set the offensive predictions to an empty array.
+    - If defensive predictions exist, use the best defensive move to predict offensive moves with the `#ofPredict` method. Sort the offensive predictions from higher to lower values (optimistic expectation).
+    - If no defensive predictions exist, initialize an empty offensive predictions array.
 
-4. **Calculate Scores**:
+4. **Score Calculation**:
 
-    - Calculate the total score by summing the scores of the selected defensive and offensive predictions.
-    - Check if the move exposes the opponent's king using the `#expPredict` method, and if so, add a significant score (e.g., 1000).
+    - Calculate the cumulative score based on the scores of the best defensive and offensive predictions.
+    - Check if the move exposes the opponent's king without exposing the selected piece (`isExposing`). If true, add a bonus to the score.
 
-5. **Score Adjustment for No Predictions**:
+5. **Handle Neutral Scenarios**:
 
-    - If there are no predictions (neither defensive nor offensive), adjust the score based on the value of the eaten piece (if any).
+    - If the cumulative scores are zero, adjust the score based on the value of the piece that might be captured (`eaten`).
+    - If no piece is being captured, add a small penalty to the score.
 
-6. **Recursive Call for Offensive Predictions**:
+6. **Recursive Deep Prediction**:
 
-    - If there is an offensive prediction, recursively call `#deepPredict` with the last offensive prediction's target position, selected piece, and updated score.
+    - Increment the deep level.
+    - If there is a last offensive prediction, recursively call `#deepPredict` with the coordinates of the last move and the piece making that move. Use the cumulative score and updated deep level.
 
-7. **Return Final Score**:
-    - Return the final calculated score for the given board position.
+7. **Return Cumulative Score**:
+
+    - Return the cumulative score representing the desirability of the sequence of moves.
