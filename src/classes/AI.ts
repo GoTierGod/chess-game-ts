@@ -143,7 +143,7 @@ export class PlayerAI {
         return captures
     }
 
-    // Ofensive prediction
+    // Offensive prediction
     #ofPredict = (
         board: Board,
         col: string,
@@ -246,8 +246,8 @@ export class PlayerAI {
         return captures
     }
 
-    // Depth prediction alternating defensive and ofensive predictions
-    #depthPredict = (
+    // Deep prediction alternating defensive and ofensive predictions
+    #deepPredict = (
         board: Board,
         col: string,
         idx: number,
@@ -288,7 +288,7 @@ export class PlayerAI {
 
         const lastPredict = ofPredict[0]
         if (ofPredict[0])
-            this.#depthPredict(
+            this.#deepPredict(
                 board,
                 lastPredict.to.col,
                 lastPredict.to.idx,
@@ -372,12 +372,7 @@ export class PlayerAI {
                         ranking.push({
                             selected,
                             move,
-                            score: this.#depthPredict(
-                                board,
-                                col,
-                                idx,
-                                selected
-                            ),
+                            score: this.#deepPredict(board, col, idx, selected),
                         })
                     }
                 }
@@ -543,7 +538,7 @@ export class PlayerAI {
                             ranking.push({
                                 selected,
                                 move,
-                                score: this.#depthPredict(
+                                score: this.#deepPredict(
                                     board,
                                     col,
                                     idx,
@@ -561,7 +556,7 @@ export class PlayerAI {
                             ranking.push({
                                 selected,
                                 move,
-                                score: this.#depthPredict(
+                                score: this.#deepPredict(
                                     board,
                                     col,
                                     idx,
@@ -581,6 +576,7 @@ export class PlayerAI {
                     ranking.sort((a, b) => b.score - a.score)
                     // console.log(`Score: ${ranking[0].score}`)
                     const avoidRepeat: string[] = []
+                    console.log(ranking.length)
 
                     if (
                         repetition.ai.piece?.id &&

@@ -1,10 +1,14 @@
 # Chess Game (Player VS AI)
 
-This is a chess game where the player can play against an AI, the AI works by simulating AI and Player moves and qualifying them to choose the best, the AI has a ofensive attitude trying to capture the player pieces.
+This is a chess game in which the player plays against an AI.
 
-## AI Algorithm documentation (16-01-2024)
+## AI Algorithm Documentation (16-01-2024)
 
-### `randomAction` Function
+-   **Behavior:** Offensive.
+-   **Operational Description:** The algorithm employs an offensive strategy by iteratively assessing potential moves for each AI piece. It integrates both defensive and offensive predictions, simulating the consequences of the AI's own moves and anticipating the responses from the opponent following the evaluation of a given move.
+-   **Prediction Horizon:** At the beginning of the match, the AI shows its ability to anticipate, making between 25 and 50 deep predictions, each of which covers hundreds of possible subsequent moves for each considered own move. This forecast gradually decreases as pieces are captured during the course of the game, aligning with the reduction in the total number of feasible moves.
+
+### `randomAction` Method
 
 This algorithm defines a function called `randomAction` that performs a random move for a chess piece, either a safe move or a non-safe move. It considers the current game state, exposed pieces, and potential coronation actions.
 
@@ -285,7 +289,7 @@ This algorithm defines a method called `#ofPredict`, which is used for offensive
 6. **Return Predictions**:
     - Return an array of `Predict` objects, each containing information about an ally piece and the predicted consequences of capturing the AI piece.
 
-### `#depthPredict` Method
+### `#deepPredict` Method
 
 This algorithm defines a method called `#depthPredict`, which performs alternating defensive and offensive move predictions to determine the overall score for a given board position. It recursively evaluates the consequences of potential moves, considering both defensive and offensive aspects.
 
