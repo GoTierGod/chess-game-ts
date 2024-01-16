@@ -262,7 +262,7 @@ export const isTied = (
 
     if (tied)
         return {
-            piece: pieces[0].piece,
+            piece: pieces[pieces.length - 1].piece,
             reason: `The ${player ? 'Player' : 'AI'} has no legal moves`,
         }
     return null

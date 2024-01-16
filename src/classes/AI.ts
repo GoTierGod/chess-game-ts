@@ -574,9 +574,9 @@ export class PlayerAI {
                 // 6. Make the move with the highest score
                 if (ranking.length) {
                     ranking.sort((a, b) => b.score - a.score)
-                    // console.log(`Score: ${ranking[0].score}`)
                     const avoidRepeat: string[] = []
-                    console.log(ranking.length)
+                    // console.log(`Score: ${ranking[0].score}`)
+                    // console.log(ranking.length)
 
                     if (
                         repetition.ai.piece?.id &&
