@@ -2,7 +2,37 @@
 
 This is a chess game in which the player plays against an AI.
 
-## AI Algorithm Documentation (16-01-2024)
+## Table of Contents
+
+-   [1. Setup](#setup)
+-   [2. AI Algorithm](#ai-algorithm)
+-   [3. AI Methods](#ai-methods)
+-   [4. Contributing](#contributing)
+-   [5. License](#license)
+
+## Setup
+
+To set up the project, follow these steps:
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/GoTierGod/chess-game-ts.git
+    ```
+
+2. Navigate to the project directory:
+
+    ```bash
+    cd chess-game-ts
+    ```
+
+3. Install dependencies:
+
+    ```bash
+    npm install
+    ```
+
+## AI Algorithm
 
 -   **Behavior:** Offensive.
 -   **Operational Description:** The algorithm employs an offensive strategy by iteratively assessing potential moves for each AI piece. It integrates both defensive and offensive predictions, simulating the consequences of the AI's own moves and anticipating the responses from the opponent following the evaluation of a given move.
@@ -148,7 +178,7 @@ This algorithm defines a function called `moveAction` that perform the movement 
 9. **Handle Repetition**:
     - Add the current move to the repetition history.
 
-## AI Methods Documentation (16-01-2024)
+## AI Methods
 
 ### `#expPredict` Method
 
@@ -339,3 +369,17 @@ This algorithm defines the `#deepPredict` method, which alternates between defen
 7. **Return Cumulative Score**:
 
     - Return the cumulative score representing the desirability of the sequence of moves.
+
+## Contributing
+
+**Please note that contributions to this project are not permitted.**
+
+While i appreciate your interest in contributing, i have currently decided to maintain the project in its current state.
+
+We encourage you to explore the existing codebase, learn from it, and use it as a reference for your own projects.
+
+Thank u for your understanding!
+
+## License
+
+This project is licensed under the [MIT License](https://github.com/GoTierGod/react-calculator/blob/main/LICENSE.md).
