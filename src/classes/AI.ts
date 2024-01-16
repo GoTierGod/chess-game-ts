@@ -106,7 +106,7 @@ export class PlayerAI {
                 if (
                     cell &&
                     cell.player &&
-                    cell.id !== current.piece.id &&
+                    cell.id !== eaten?.id &&
                     cell.name === 'Knight'
                 ) {
                     allAroundEnemies.push(
