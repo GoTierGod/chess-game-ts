@@ -25,6 +25,9 @@ import {
 } from '../functions/collisions'
 import { Board, columns } from '../constants/board'
 
+type PieceColor = 'White' | 'Black'
+type PieceName = 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn'
+
 interface PieceImage {
     src: string
     alt: string
@@ -37,7 +40,7 @@ export interface PieceCoords {
 
 abstract class ChessPiece {
     public player: boolean
-    public color: 'White' | 'Black'
+    public color: PieceColor
     public id: number
 
     constructor(player: boolean, id: number) {
@@ -48,8 +51,7 @@ abstract class ChessPiece {
 }
 
 export class Pawn extends ChessPiece {
-    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
-        'Pawn'
+    public name: PieceName = 'Pawn'
     public value = 1
     public image: PieceImage
 
@@ -78,7 +80,6 @@ export class Pawn extends ChessPiece {
         current: PieceCoords,
         next: PieceCoords
     ): boolean => {
-        // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
         if (nextPosition && nextPosition.player === this.player) return true
@@ -90,49 +91,45 @@ export class Pawn extends ChessPiece {
                   Boolean(board[next.col][next.idx + 1])
     }
 
-    getCaptureMoves = (board: Board, col: string, idx: number): string[] => {
+    getCaptureMoves = (board: Board, current: PieceCoords): string[] => {
         const cm = []
-        const colIdx = columns.indexOf(col)
+        const colIdx = columns.indexOf(current.col)
 
         const left = this.player
-            ? board[columns[colIdx - 1]]?.[idx + 1]
-            : board[columns[colIdx - 1]]?.[idx - 1]
+            ? board[columns[colIdx - 1]]?.[current.idx + 1]
+            : board[columns[colIdx - 1]]?.[current.idx - 1]
 
         const right = this.player
-            ? board[columns[colIdx + 1]]?.[idx + 1]
-            : board[columns[colIdx + 1]]?.[idx - 1]
+            ? board[columns[colIdx + 1]]?.[current.idx + 1]
+            : board[columns[colIdx + 1]]?.[current.idx - 1]
 
         if (left)
-            'id' in left &&
-                cm.push(
-                    this.player
-                        ? columns[colIdx - 1] + [idx + 1]
-                        : columns[colIdx - 1] + [idx - 1]
-                )
+            cm.push(
+                this.player
+                    ? columns[colIdx - 1] + (current.idx + 1)
+                    : columns[colIdx - 1] + (current.idx - 1)
+            )
         if (right)
-            'id' in right &&
-                cm.push(
-                    this.player
-                        ? columns[colIdx + 1] + [idx + 1]
-                        : columns[colIdx + 1] + [idx - 1]
-                )
+            cm.push(
+                this.player
+                    ? columns[colIdx + 1] + (current.idx + 1)
+                    : columns[colIdx + 1] + (current.idx - 1)
+            )
 
         return removeImpossibles(
             cm.filter(
                 (move) =>
-                    !this.isClogged(
-                        board,
-                        { col, idx },
-                        { col: getMoveCol(move), idx: getMoveIdx(move) }
-                    )
+                    !this.isClogged(board, current, {
+                        col: getMoveCol(move),
+                        idx: getMoveIdx(move),
+                    })
             )
         )
     }
 }
 
 export class Queen extends ChessPiece {
-    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
-        'Queen'
+    public name: PieceName = 'Queen'
     public value = 50
     public image: PieceImage
 
@@ -153,7 +150,6 @@ export class Queen extends ChessPiece {
         current: PieceCoords,
         next: PieceCoords
     ): boolean => {
-        // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
         return (
@@ -166,15 +162,13 @@ export class Queen extends ChessPiece {
 
     getCaptureMoves = (
         board: Board,
-        col: string,
-        idx: number,
+        current: PieceCoords,
         piece = this
-    ): string[] => captureMoves(board, col, idx, piece)
+    ): string[] => captureMoves(board, current, piece)
 }
 
 export class King extends ChessPiece {
-    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
-        'King'
+    public name: PieceName = 'King'
     public value = 1000
     public image: PieceImage
 
@@ -195,7 +189,6 @@ export class King extends ChessPiece {
         _current: PieceCoords,
         next: PieceCoords
     ): boolean => {
-        // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
         return Boolean(nextPosition && nextPosition.player === this.player)
@@ -203,17 +196,15 @@ export class King extends ChessPiece {
 
     getCaptureMoves = (
         board: Board,
-        col: string,
-        idx: number,
+        current: PieceCoords,
         piece = this
     ): string[] => {
-        return captureMoves(board, col, idx, piece)
+        return captureMoves(board, current, piece)
     }
 }
 
 export class Bishop extends ChessPiece {
-    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
-        'Bishop'
+    public name: PieceName = 'Bishop'
     public value = 4
     public image: PieceImage
 
@@ -234,7 +225,6 @@ export class Bishop extends ChessPiece {
         current: PieceCoords,
         next: PieceCoords
     ): boolean => {
-        // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
         return (
@@ -245,17 +235,15 @@ export class Bishop extends ChessPiece {
 
     getCaptureMoves = (
         board: Board,
-        col: string,
-        idx: number,
+        current: PieceCoords,
         piece = this
     ): string[] => {
-        return captureMoves(board, col, idx, piece)
+        return captureMoves(board, current, piece)
     }
 }
 
 export class Knight extends ChessPiece {
-    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
-        'Knight'
+    public name: PieceName = 'Knight'
     public value = 3
     public image: PieceImage
 
@@ -285,7 +273,6 @@ export class Knight extends ChessPiece {
         _current: PieceCoords,
         next: PieceCoords
     ): boolean => {
-        // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
         return Boolean(nextPosition && nextPosition.player === this.player)
@@ -293,17 +280,15 @@ export class Knight extends ChessPiece {
 
     getCaptureMoves = (
         board: Board,
-        col: string,
-        idx: number,
+        current: PieceCoords,
         piece = this
     ): string[] => {
-        return captureMoves(board, col, idx, piece)
+        return captureMoves(board, current, piece)
     }
 }
 
 export class Rook extends ChessPiece {
-    public name: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn' =
-        'Rook'
+    public name: PieceName = 'Rook'
     public value = 5
     public image: PieceImage
 
@@ -324,7 +309,6 @@ export class Rook extends ChessPiece {
         current: PieceCoords,
         next: PieceCoords
     ): boolean => {
-        // const currentPosition = board[current.col][current.idx]
         const nextPosition = board[next.col][next.idx]
 
         return (
@@ -336,11 +320,10 @@ export class Rook extends ChessPiece {
 
     getCaptureMoves = (
         board: Board,
-        col: string,
-        idx: number,
+        current: PieceCoords,
         piece = this
     ): string[] => {
-        return captureMoves(board, col, idx, piece)
+        return captureMoves(board, current, piece)
     }
 }
 

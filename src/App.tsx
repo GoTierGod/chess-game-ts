@@ -204,7 +204,7 @@ export default function PvAI() {
                     piece && piece.name === 'King'
                         ? [
                               ...piece.moves(col, idx),
-                              ...piece.getCaptureMoves(board, col, idx),
+                              ...piece.getCaptureMoves(board, { col, idx }),
                           ]
                               .filter(
                                   (move) =>
@@ -228,7 +228,7 @@ export default function PvAI() {
                               )
                         : [
                               ...piece.moves(col, idx),
-                              ...piece.getCaptureMoves(board, col, idx),
+                              ...piece.getCaptureMoves(board, { col, idx }),
                           ].filter(
                               (move) =>
                                   !piece?.isClogged(
@@ -268,11 +268,10 @@ export default function PvAI() {
                               .moves(selected.col, selected.idx)
                               .includes(col + idx) ||
                           selected.piece
-                              .getCaptureMoves(
-                                  board,
-                                  selected.col,
-                                  selected.idx
-                              )
+                              .getCaptureMoves(board, {
+                                  col: selected.col,
+                                  idx: selected.idx,
+                              })
                               .includes(col + idx)) &&
                     !selected.piece?.isClogged(board, selected, {
                         col: col,

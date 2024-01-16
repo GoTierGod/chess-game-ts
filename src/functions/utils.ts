@@ -9,49 +9,43 @@ export const range = (limit = 8): null[] => Array(limit).fill(null)
 export const getMoveCol = (move: string) => {
     const col = move.match(/[a-z]/)
 
-    if (!col) throw new Error(`Invalid move, no column match!`)
+    if (!col) throw new Error(`Invalid move: No column match found!`)
     return col[0]
 }
 
-// Identify index in a move string
 export const getMoveIdx = (move: string) => {
     const idx = move.match(/\d/)
 
-    if (!idx) throw new Error(`Invalid move, no index match!`)
+    if (!idx) throw new Error(`Invalid move: No index match found!`)
     return Number(idx[0])
 }
 
 // Remove impossible moves (out of range indexes or NaN values)
 export const removeImpossibles = (moves: string[]) =>
-    moves
-        .filter((m) => Boolean(m))
-        .filter((m) => {
-            const validMove = m.match(/[a-z]\d/i)
-            const idx = m.match(/\d+/)
+    moves.filter(Boolean).filter((m) => {
+        const validMove = m.match(/[a-z]\d/i)
+        const idx = m.match(/\d+/)
 
-            if (!idx || (validMove && validMove[0] !== m)) return false
-            return 7 >= Number(idx[0]) && validMove && validMove[0] === m
-        })
+        if (!idx || !validMove || validMove[0] !== m) return false
+
+        const numericIdx = Number(idx[0])
+        return numericIdx >= 0 && numericIdx <= 7
+    })
 
 // Identify and return capture moves for a specific piece
 export const captureMoves = (
     board: Board,
-    col: string,
-    idx: number,
+    current: PieceCoords,
     piece: ChessPieceType
 ): string[] => {
     const cm = piece
-        .moves(col, idx)
+        .moves(current.col, current.idx)
         .filter(
             (move) =>
-                !piece?.isClogged(
-                    board,
-                    { col: col, idx: idx },
-                    {
-                        col: getMoveCol(move),
-                        idx: getMoveIdx(move),
-                    }
-                )
+                !piece?.isClogged(board, current, {
+                    col: getMoveCol(move),
+                    idx: getMoveIdx(move),
+                })
         )
         .filter((move) => {
             const col = getMoveCol(move)
@@ -85,6 +79,7 @@ export const deepCopy = <T>(obj: T): T => {
     return copy
 }
 
+// Detect if the next position will expose the a piece
 export const isExposed = (
     board: Board,
     current: SelectedPiece,
@@ -103,7 +98,10 @@ export const isExposed = (
     // Use a queen for convenience to identify all around enemies
     const queen = new Queen(player, 100)
     // All around enemy positions
-    const allAround = queen.getCaptureMoves(fantasyBoard, next.col, next.idx)
+    const allAround = queen.getCaptureMoves(fantasyBoard, {
+        col: next.col,
+        idx: next.idx,
+    })
 
     // Locate enemy knights
     for (const column of columns) {
@@ -120,11 +118,10 @@ export const isExposed = (
 
         // Identify capture moves for the enemy in this position
         const piece = fantasyBoard[thisCol][thisIdx] as ChessPieceType
-        const captureMoves = piece.getCaptureMoves(
-            fantasyBoard,
-            thisCol,
-            thisIdx
-        )
+        const captureMoves = piece.getCaptureMoves(fantasyBoard, {
+            col: thisCol,
+            idx: thisIdx,
+        })
 
         // If this enemy can capture at this coords, return true
         if (captureMoves.includes(next.col + next.idx)) return true
@@ -133,6 +130,7 @@ export const isExposed = (
     return false
 }
 
+// Detect an exposed king
 export const exposedKing = (
     board: Board,
     player: boolean
@@ -158,7 +156,7 @@ export const exposedKing = (
         // Use a queen for convenience to identify all around enemies
         const queenAI = new Queen(player, 100)
         // All around enemy positions
-        const allAround = queenAI.getCaptureMoves(board, col, idx, queenAI)
+        const allAround = queenAI.getCaptureMoves(board, { col, idx }, queenAI)
 
         // Locate enemy knights
         for (const column of columns) {
@@ -178,7 +176,10 @@ export const exposedKing = (
 
             // Identify capture moves for the enemy in this position
             const piece = board[thisCol][thisIdx] as ChessPieceType
-            const captureMoves = piece.getCaptureMoves(board, thisCol, thisIdx)
+            const captureMoves = piece.getCaptureMoves(board, {
+                col: thisCol,
+                idx: thisIdx,
+            })
 
             // If this enemy can capture the AI piece
             // Add the current enemy position and his capture move
@@ -220,6 +221,7 @@ export const exposedKing = (
     return null
 }
 
+// Detect a tie
 export const isTied = (
     board: Board,
     player: boolean

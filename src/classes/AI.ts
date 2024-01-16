@@ -35,11 +35,7 @@ export class PlayerAI {
         })()
 
         // Piece capture moves
-        const captureMoves = current.piece.getCaptureMoves(
-            fantasyBoard,
-            next.col,
-            next.idx
-        )
+        const captureMoves = current.piece.getCaptureMoves(fantasyBoard, next)
 
         // Loop through capture moves
         for (const move of captureMoves) {
@@ -107,8 +103,7 @@ export class PlayerAI {
         // All around enemy positions
         const allAroundEnemies = queenAI.getCaptureMoves(
             fantasyBoard,
-            next.col,
-            next.idx,
+            next,
             queenAI
         )
 
@@ -137,11 +132,10 @@ export class PlayerAI {
 
             // Identify capture moves for the enemy in this position
             const enemyPiece = fantasyBoard[thisCol][thisIdx] as ChessPieceType
-            let captureMoves = enemyPiece.getCaptureMoves(
-                fantasyBoard,
-                thisCol,
-                thisIdx
-            )
+            let captureMoves = enemyPiece.getCaptureMoves(fantasyBoard, {
+                col: thisCol,
+                idx: thisIdx,
+            })
 
             if (enemyPiece.name === 'King') {
                 captureMoves = captureMoves.filter(
@@ -211,8 +205,7 @@ export class PlayerAI {
         // All around ally positions
         const allAroundAllies = queenAI.getCaptureMoves(
             fantasyBoard,
-            next.col,
-            next.idx,
+            next,
             queenAI
         )
 
@@ -241,11 +234,10 @@ export class PlayerAI {
 
             // Identify capture moves for the ally in this position
             const allyPiece = fantasyBoard[thisCol][thisIdx] as ChessPieceType
-            let captureMoves = allyPiece.getCaptureMoves(
-                fantasyBoard,
-                thisCol,
-                thisIdx
-            )
+            let captureMoves = allyPiece.getCaptureMoves(fantasyBoard, {
+                col: thisCol,
+                idx: thisIdx,
+            })
 
             if (allyPiece.name === 'King') {
                 captureMoves = captureMoves.filter(
@@ -525,7 +517,10 @@ export class PlayerAI {
                     }
 
                     let capMoves = selected.piece
-                        .getCaptureMoves(board, selected.col, selected.idx)
+                        .getCaptureMoves(board, {
+                            col: selected.col,
+                            idx: selected.idx,
+                        })
                         .sort((a, b) => {
                             const [colA, idxA] = [getMoveCol(a), getMoveIdx(a)]
                             const [colB, idxB] = [getMoveCol(b), getMoveIdx(b)]
