@@ -311,7 +311,7 @@ export class PlayerAI {
         deep += 1
 
         const lastPredict = ofPredict[0]
-        if (lastPredict && deep < 64) {
+        if (lastPredict && deep < 32) {
             this.#deepPredict(
                 board,
                 {
