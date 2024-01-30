@@ -467,6 +467,10 @@ export default function PvAI() {
         setSelected(null)
         setValidMoves([])
         setExposed(null)
+        setRepetition({
+            ai: { piece: null, moves: [] },
+            player: { piece: null, moves: [] },
+        })
 
         const element = playerKingRef.current
         if (element) {
@@ -644,6 +648,10 @@ export default function PvAI() {
         repetition.player.piece,
         repetition.player.moves,
     ])
+
+    useEffect(() => {
+        console.log(repetition)
+    }, [repetition])
 
     // useEffect(() => {
     //     console.log(exposed)
