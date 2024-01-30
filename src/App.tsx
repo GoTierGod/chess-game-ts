@@ -649,10 +649,6 @@ export default function PvAI() {
         repetition.player.moves,
     ])
 
-    useEffect(() => {
-        console.log(repetition)
-    }, [repetition])
-
     // useEffect(() => {
     //     console.log(exposed)
     // }, [exposed])
