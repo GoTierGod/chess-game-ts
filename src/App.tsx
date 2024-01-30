@@ -68,6 +68,7 @@ const winnerIcon = <img src={winnersCupImg} alt="Winner's Cup" />
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
+    // State that represents consecutive moves of a piece to detect position repetitions
     const [repetition, setRepetition] = useState({
         ai: { piece: null, moves: [] },
         player: { piece: null, moves: [] },
