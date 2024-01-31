@@ -17,7 +17,7 @@ import {
     Bishop,
     ChessPieceType,
     Knight,
-    PieceCoords,
+    // PieceCoords,
     Queen,
     Rook,
 } from './classes/pieces'
@@ -497,54 +497,6 @@ export default function PvAI() {
             if (!exposed.safes.length) setWinner(!exposed.king.piece.player)
     }, [exposed])
 
-    // Auto select the player exposed king
-    useEffect(() => {
-        if (turn && exposed && exposed.king.piece.player) {
-            const kingPosition: PieceCoords | null = (() => {
-                for (const column of columns) {
-                    for (const cell of board[column]) {
-                        if (cell && cell.player && cell.name === 'King') {
-                            return {
-                                col: column,
-                                idx: board[column].indexOf(cell),
-                            }
-                        }
-                    }
-                }
-
-                return null
-            })()
-
-            if (kingPosition) {
-                const [col, idx] = [kingPosition.col, kingPosition.idx]
-                const element = playerKingRef.current as HTMLDivElement
-                const piece = board[col][idx] as ChessPieceType
-
-                if (!selected) {
-                    setSelected((prevSelected) => {
-                        if (prevSelected !== null) {
-                            prevSelected.ele.style.border = ''
-                            prevSelected.ele.style.backgroundColor = ''
-                        }
-
-                        element.style.border = '2px solid var(--dark)'
-                        element.style.backgroundColor = 'var(--gray)'
-
-                        return {
-                            ele: element,
-                            col: col,
-                            idx: idx,
-                            piece: piece,
-                        }
-                    })
-
-                    setValidMoves(exposed.safes)
-                }
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [exposed])
-
     // Detect a pawn available for coronation
     useEffect(() => {
         for (const col of columns) {
@@ -583,7 +535,7 @@ export default function PvAI() {
 
         repetition.player.moves.forEach(
             (move) =>
-                (counters[move] = {
+                (counters['player' + move] = {
                     player: true,
                     ct: (counters[move]?.ct || 0) + 1,
                 })
@@ -591,7 +543,7 @@ export default function PvAI() {
 
         repetition.ai.moves.forEach(
             (move) =>
-                (counters[move] = {
+                (counters['ai-' + move] = {
                     player: false,
                     ct: (counters[move]?.ct || 0) + 1,
                 })
