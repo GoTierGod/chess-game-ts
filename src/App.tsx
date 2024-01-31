@@ -43,7 +43,7 @@ export interface repetition {
 }
 
 const loserIcon = (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative' }} className={style.endIcon}>
         <img
             src={winnersCupImg}
             alt="Winner's Cup"
@@ -62,8 +62,10 @@ const loserIcon = (
         />
     </div>
 )
-const tiedIcon = <img src={handshakeImg} alt='Tied' />
-const winnerIcon = <img src={winnersCupImg} alt="Winner's Cup" />
+const tiedIcon = <img src={handshakeImg} alt='Tied' className={style.endIcon} />
+const winnerIcon = (
+    <img src={winnersCupImg} alt="Winner's Cup" className={style.endIcon} />
+)
 
 const playerAI = new PlayerAI()
 
