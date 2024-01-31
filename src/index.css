@@ -160,6 +160,7 @@
     --white: #f4f4f4;
     --black: #040404;
     --dark: #141414;
+    --darkgray: #1a1a1a;
     --gray: #242424;
     --light-gray: #343434;
     --lighter-gray: #545454;
@@ -188,6 +189,12 @@ body {
     place-items: center;
     min-width: 320px;
     min-height: 100vh;
+
+    background: linear-gradient(30deg, #1a1a1ac4, #1a1a1ac4),
+        url('/src/assets/bg/chess-queen.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 h1 {
