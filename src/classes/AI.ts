@@ -327,6 +327,83 @@ export class PlayerAI {
         return score
     }
 
+    // Make the best move based on the ranking and avoiding repetition
+    #move = (
+        board: Board,
+        repetition: { ai: repetition; player: repetition },
+        ranking: {
+            selected: SelectedPiece
+            move: string
+            score: number
+        }[],
+        setBoard: React.Dispatch<React.SetStateAction<Board>>,
+        addRepetition: (
+            piece: ChessPieceType,
+            move: string,
+            player: boolean
+        ) => void
+    ) => {
+        if (ranking.length) {
+            // Sort ranking from higher to lowest score
+            ranking.sort((a, b) => b.score - a.score)
+            // Store repeated moves to be avoided
+            const avoidRepeat: string[] = []
+
+            // Detect and store moves repeated at least 2 times
+            if (repetition.ai.piece?.id && repetition.ai.moves.length >= 2) {
+                const counters: { [key: string]: number } = {}
+
+                repetition.ai.moves.forEach(
+                    (move) => (counters[move] = (counters[move] || 0) + 1)
+                )
+
+                for (const move of Object.keys(counters))
+                    if (counters[move] === 2) {
+                        avoidRepeat.push(move)
+                    }
+            }
+
+            // Return a move avoiding repetition as much as possible
+            const avoidRepetition = () => {
+                if (
+                    ranking[0].selected.piece.id === repetition.ai.piece?.id &&
+                    avoidRepeat.includes(ranking[0].move)
+                ) {
+                    if (ranking.length > 1) {
+                        ranking.shift()
+                        avoidRepetition()
+                    }
+                }
+
+                return ranking[0]
+            }
+
+            // Best ranked move after avoid repetition
+            const bestRanked = avoidRepetition()
+
+            // Best ranked move column and index
+            const col = getMoveCol(bestRanked.move)
+            const idx = getMoveIdx(bestRanked.move)
+
+            // Add the best ranked move data to the repetition history
+            addRepetition(bestRanked.selected.piece, bestRanked.move, false)
+
+            // Update board
+            setBoard((prevBoard) => {
+                const newBoard = deepCopy(board)
+
+                newBoard[bestRanked.selected.col] = [
+                    ...prevBoard[bestRanked.selected.col],
+                ]
+                newBoard[bestRanked.selected.col][bestRanked.selected.idx] =
+                    null
+                newBoard[col][idx] = bestRanked.selected.piece
+
+                return newBoard
+            })
+        }
+    }
+
     // Perform a random move
     randomAction = (
         board: Board,
@@ -369,7 +446,9 @@ export class PlayerAI {
         // Safe move action
         const safeMoveAction = () => {
             if (exposed) {
+                // Exposed king piece
                 const selected = exposed.king
+                // Exposed king safe moves
                 const safeMoves = exposed.safes.sort((a, b) => {
                     const [colA, idxA] = [getMoveCol(a), getMoveIdx(a)]
                     const [colB, idxB] = [getMoveCol(b), getMoveIdx(b)]
@@ -384,6 +463,7 @@ export class PlayerAI {
                     return 0
                 })
 
+                // Rate safe moves of the exposed king
                 if (safeMoves.length) {
                     for (const move of safeMoves) {
                         const col = getMoveCol(move)
@@ -401,73 +481,15 @@ export class PlayerAI {
                     }
                 }
 
-                if (ranking.length) {
-                    ranking.sort((a, b) => b.score - a.score)
-                    const avoidRepeat: string[] = []
-
-                    if (
-                        repetition.ai.piece?.id &&
-                        repetition.ai.moves.length >= 2
-                    ) {
-                        const counters: { [key: string]: number } = {}
-
-                        repetition.ai.moves.forEach(
-                            (move) =>
-                                (counters[move] = (counters[move] || 0) + 1)
-                        )
-
-                        for (const move of Object.keys(counters))
-                            if (counters[move] === 2) {
-                                avoidRepeat.push(move)
-                            }
-                    }
-
-                    const avoidRepetition = () => {
-                        if (
-                            ranking[0].selected.piece.id ===
-                                repetition.ai.piece?.id &&
-                            avoidRepeat.includes(ranking[0].move)
-                        ) {
-                            if (ranking.length > 1) {
-                                ranking.shift()
-                                avoidRepetition()
-                            }
-                        }
-
-                        return ranking[0]
-                    }
-
-                    const bestRanked = avoidRepetition()
-
-                    const col = getMoveCol(bestRanked.move)
-                    const idx = getMoveIdx(bestRanked.move)
-
-                    addRepetition(
-                        bestRanked.selected.piece,
-                        bestRanked.move,
-                        false
-                    )
-
-                    setBoard((prevBoard) => {
-                        const newBoard = deepCopy(board)
-
-                        newBoard[bestRanked.selected.col] = [
-                            ...prevBoard[bestRanked.selected.col],
-                        ]
-                        newBoard[bestRanked.selected.col][
-                            bestRanked.selected.idx
-                        ] = null
-                        newBoard[col][idx] = bestRanked.selected.piece
-
-                        return newBoard
-                    })
-                }
+                // Make the best move
+                this.#move(board, repetition, ranking, setBoard, addRepetition)
             }
         }
 
         // Standard move action
         const moveAction = () => {
             if (blacklist.length < remaining) {
+                // Select a random piece
                 const selectRandomPiece = (): SelectedPiece => {
                     const col =
                         columns[
@@ -488,9 +510,12 @@ export class PlayerAI {
                         }
                     } else return selectRandomPiece()
                 }
+                // Randomly selected piece
                 const selected: SelectedPiece = selectRandomPiece()
 
+                // Rate the moves using deep prediction and add them to the ranking
                 if (selected) {
+                    // Standard moves
                     let moves = selected.piece
                         .moves(selected.col, selected.idx)
                         .filter(
@@ -501,6 +526,7 @@ export class PlayerAI {
                                 })
                         )
 
+                    // Filtering auto-exposing moves from moves if the piece is the king
                     if (selected.piece.name === 'King') {
                         moves = moves.filter(
                             (move) =>
@@ -516,6 +542,7 @@ export class PlayerAI {
                         )
                     }
 
+                    // Capture moves
                     let capMoves = selected.piece
                         .getCaptureMoves(board, {
                             col: selected.col,
@@ -537,6 +564,7 @@ export class PlayerAI {
                             return 0
                         })
 
+                    // Filtering auto-exposing moves from capture moves if the piece is the king
                     if (selected.piece.name === 'King') {
                         capMoves = capMoves.filter(
                             (move) =>
@@ -552,6 +580,7 @@ export class PlayerAI {
                         )
                     }
 
+                    // Rate capture moves for the selected piece
                     if (capMoves.length) {
                         for (const move of capMoves) {
                             const col = getMoveCol(move)
@@ -568,7 +597,7 @@ export class PlayerAI {
                             })
                         }
                     }
-                    // Normal moves
+                    // Rate standard moves for the selected piece
                     if (moves.length) {
                         for (const move of moves) {
                             const col = getMoveCol(move)
@@ -586,71 +615,13 @@ export class PlayerAI {
                         }
                     }
 
+                    // Blacklist the piece and continue rating moves of the remaining pieces
                     blacklist.push(selected.piece.id)
                     moveAction()
                 }
             } else {
-                if (ranking.length) {
-                    ranking.sort((a, b) => b.score - a.score)
-                    const avoidRepeat: string[] = []
-
-                    if (
-                        repetition.ai.piece?.id &&
-                        repetition.ai.moves.length >= 2
-                    ) {
-                        const counters: { [key: string]: number } = {}
-
-                        repetition.ai.moves.forEach(
-                            (move) =>
-                                (counters[move] = (counters[move] || 0) + 1)
-                        )
-
-                        for (const move of Object.keys(counters))
-                            if (counters[move] === 2) {
-                                avoidRepeat.push(move)
-                            }
-                    }
-
-                    const avoidRepetition = () => {
-                        if (
-                            ranking[0].selected.piece.id ===
-                                repetition.ai.piece?.id &&
-                            avoidRepeat.includes(ranking[0].move)
-                        ) {
-                            if (ranking.length > 1) {
-                                ranking.shift()
-                                avoidRepetition()
-                            }
-                        }
-
-                        return ranking[0]
-                    }
-
-                    const bestRanked = avoidRepetition()
-
-                    const col = getMoveCol(bestRanked.move)
-                    const idx = getMoveIdx(bestRanked.move)
-
-                    addRepetition(
-                        bestRanked.selected.piece,
-                        bestRanked.move,
-                        false
-                    )
-
-                    setBoard((prevBoard) => {
-                        const newBoard = deepCopy(board)
-
-                        newBoard[bestRanked.selected.col] = [
-                            ...prevBoard[bestRanked.selected.col],
-                        ]
-                        newBoard[bestRanked.selected.col][
-                            bestRanked.selected.idx
-                        ] = null
-                        newBoard[col][idx] = bestRanked.selected.piece
-
-                        return newBoard
-                    })
-                }
+                // Make the best move
+                this.#move(board, repetition, ranking, setBoard, addRepetition)
             }
         }
 
