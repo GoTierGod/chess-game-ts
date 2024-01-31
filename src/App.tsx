@@ -29,14 +29,13 @@ import {
     repeatedMoveStyle,
 } from './constants/styles'
 
-import playerQueenImg from './assets/white/queen.svg'
-import playerBishopImg from './assets/white/bishop.svg'
-import playerKnightImg from './assets/white/knight.svg'
-import playerRookImg from './assets/white/rook.svg'
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
     faBrain,
+    faChessBishop,
+    faChessKnight,
+    faChessQueen,
+    faChessRook,
     faHandshake,
     faTrophy,
 } from '@fortawesome/free-solid-svg-icons'
@@ -777,16 +776,16 @@ export default function PvAI() {
                             </header>
                             <div>
                                 <button onClick={() => toCrown('Queen')}>
-                                    <img src={playerQueenImg} alt='Queen' />
+                                    <FontAwesomeIcon icon={faChessQueen} />
                                 </button>
                                 <button onClick={() => toCrown('Bishop')}>
-                                    <img src={playerBishopImg} alt='Bishop' />
+                                    <FontAwesomeIcon icon={faChessBishop} />
                                 </button>
                                 <button onClick={() => toCrown('Knight')}>
-                                    <img src={playerKnightImg} alt='Knight' />
+                                    <FontAwesomeIcon icon={faChessKnight} />
                                 </button>
                                 <button onClick={() => toCrown('Rook')}>
-                                    <img src={playerRookImg} alt='Rook' />
+                                    <FontAwesomeIcon icon={faChessRook} />
                                 </button>
                             </div>
                         </article>
