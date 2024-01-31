@@ -68,16 +68,30 @@
     cursor: pointer;
 }
 
-.cell img {
+.cell svg {
     width: auto;
 
     height: 1.25rem;
+
+    z-index: 5;
 }
 
-.endCell img {
+.cell svg path {
+    stroke: var(--darker-green);
+    stroke-width: 1rem;
+}
+
+.endCell svg {
     width: auto;
 
     height: 1rem;
+
+    z-index: 5;
+}
+
+.endCell svg path {
+    stroke: var(--darker-green);
+    stroke-width: 1rem;
 }
 
 :where(.col, .endCol):nth-child(odd) :where(.cell, .endCell):nth-child(odd) {
@@ -174,9 +188,18 @@
     align-items: center;
 }
 
-.endIcon img {
-    width: 4rem;
-    height: auto;
+.winning p {
+    width: 100%;
+    max-width: 300px;
+
+    text-align: center;
+
+    font-weight: 400;
+}
+
+.endIcon {
+    height: 3rem;
+    width: auto;
 }
 
 .coronation div {
@@ -191,12 +214,19 @@
     justify-content: center;
     align-items: center;
 
+    padding: 0.5rem 0.75rem;
+
     background: var(--light-green);
     color: var(--darkgray);
+
+    font-size: 1rem;
+    font-weight: 500;
 
     border: none;
     outline: none;
     border-radius: 3px;
+
+    transition: transform 300ms;
 }
 
 .modal button:hover {
@@ -205,26 +235,24 @@
 
 .modal button:active {
     transform: scale(1.025);
-
-    outline: none;
 }
 
 @media screen and (min-width: 375px) {
-    .cell img {
+    .cell svg {
         height: 1.5rem;
     }
 
-    .endCell img {
+    .endCell svg {
         height: 1.25rem;
     }
 }
 
 @media screen and (min-width: 425px) {
-    .cell img {
+    .cell svg {
         height: 2rem;
     }
 
-    .endCell img {
+    .endCell svg {
         height: 1.5rem;
     }
 }

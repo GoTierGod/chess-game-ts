@@ -33,39 +33,24 @@ import playerQueenImg from './assets/white/queen.svg'
 import playerBishopImg from './assets/white/bishop.svg'
 import playerKnightImg from './assets/white/knight.svg'
 import playerRookImg from './assets/white/rook.svg'
-import winnersCupImg from './assets/others/trophy-svgrepo-com.svg'
-import timesImg from './assets/others/times-svgrepo-com.svg'
-import handshakeImg from './assets/others/hand-shake-svgrepo-com.svg'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+    faBrain,
+    faHandshake,
+    faTrophy,
+} from '@fortawesome/free-solid-svg-icons'
 
 export interface repetition {
     piece: ChessPieceType | null
     moves: string[]
 }
 
-const loserIcon = (
-    <div style={{ position: 'relative' }} className={style.endIcon}>
-        <img
-            src={winnersCupImg}
-            alt="Winner's Cup"
-            style={{ position: 'relative', left: '-5%', top: '0' }}
-        />
-        <img
-            src={timesImg}
-            alt='Denegated'
-            style={{
-                position: 'absolute',
-                left: '15%',
-                top: '0',
-                height: '3rem',
-                width: 'Auto',
-            }}
-        />
-    </div>
+const loserIcon = <FontAwesomeIcon icon={faBrain} className={style.endIcon} />
+const tiedIcon = (
+    <FontAwesomeIcon icon={faHandshake} className={style.endIcon} />
 )
-const tiedIcon = <img src={handshakeImg} alt='Tied' className={style.endIcon} />
-const winnerIcon = (
-    <img src={winnersCupImg} alt="Winner's Cup" className={style.endIcon} />
-)
+const winnerIcon = <FontAwesomeIcon icon={faTrophy} className={style.endIcon} />
 
 const playerAI = new PlayerAI()
 
@@ -155,10 +140,13 @@ export default function PvAI() {
                                 />
                             </div>
                             {cell && (
-                                <img
-                                    src={cell.image.src}
-                                    alt={cell.image.alt}
-                                    style={{ zIndex: '10' }}
+                                <FontAwesomeIcon
+                                    icon={cell.icon}
+                                    color={
+                                        cell.player
+                                            ? 'var(--white)'
+                                            : 'var(--darkgray)'
+                                    }
                                 />
                             )}
                         </div>
@@ -736,10 +724,13 @@ export default function PvAI() {
                                     />
                                 </div>
                                 {cell && (
-                                    <img
-                                        src={cell.image.src}
-                                        alt={cell.image.alt}
-                                        style={{ zIndex: '10' }}
+                                    <FontAwesomeIcon
+                                        icon={cell.icon}
+                                        color={
+                                            cell.player
+                                                ? 'var(--white)'
+                                                : 'var(--darkgray)'
+                                        }
                                     />
                                 )}
                             </div>
@@ -767,7 +758,7 @@ export default function PvAI() {
                                 : winner === false
                                   ? loserIcon
                                   : tie && tiedIcon}
-                            <p style={{ width: '65%', textAlign: 'center' }}>
+                            <p>
                                 {winner
                                     ? `The player captured the AI king`
                                     : winner === false

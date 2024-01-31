@@ -1,16 +1,3 @@
-import whitePawn from '../assets/white/pawn.svg'
-import whiteKing from '../assets/white/king.svg'
-import whiteQueen from '../assets/white/queen.svg'
-import whiteBishop from '../assets/white/bishop.svg'
-import whiteKnight from '../assets/white/knight.svg'
-import whiteRook from '../assets/white/rook.svg'
-import blackPawn from '../assets/black/pawn.svg'
-import blackKing from '../assets/black/king.svg'
-import blackQueen from '../assets/black/queen.svg'
-import blackBishop from '../assets/black/bishop.svg'
-import blackKnight from '../assets/black/knight.svg'
-import blackRook from '../assets/black/rook.svg'
-
 import { around, diagonal, horizontal, vertical } from '../functions/moves'
 import {
     captureMoves,
@@ -24,14 +11,18 @@ import {
     verticalCollision,
 } from '../functions/collisions'
 import { Board, columns } from '../constants/board'
+import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import {
+    faChessBishop,
+    faChessKing,
+    faChessKnight,
+    faChessPawn,
+    faChessQueen,
+    faChessRook,
+} from '@fortawesome/free-solid-svg-icons'
 
 type PieceColor = 'White' | 'Black'
 type PieceName = 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn'
-
-interface PieceImage {
-    src: string
-    alt: string
-}
 
 export interface PieceCoords {
     col: string
@@ -53,14 +44,11 @@ abstract class ChessPiece {
 export class Pawn extends ChessPiece {
     public name: PieceName = 'Pawn'
     public value = 1
-    public image: PieceImage
+    public icon: IconDefinition
 
     constructor(player: boolean, id: number) {
         super(player, id)
-        this.image = {
-            src: player ? whitePawn : blackPawn,
-            alt: this.color + this.name,
-        }
+        this.icon = faChessPawn
     }
 
     moves = (col: string, idx: number): string[] => {
@@ -131,14 +119,11 @@ export class Pawn extends ChessPiece {
 export class Queen extends ChessPiece {
     public name: PieceName = 'Queen'
     public value = 50
-    public image: PieceImage
+    public icon: IconDefinition
 
     constructor(player: boolean, id: number) {
         super(player, id)
-        this.image = {
-            src: player ? whiteQueen : blackQueen,
-            alt: this.color + this.name,
-        }
+        this.icon = faChessQueen
     }
 
     moves = (col: string, idx: number): string[] => {
@@ -170,14 +155,11 @@ export class Queen extends ChessPiece {
 export class King extends ChessPiece {
     public name: PieceName = 'King'
     public value = 1000
-    public image: PieceImage
+    public icon: IconDefinition
 
     constructor(player: boolean, id: number) {
         super(player, id)
-        this.image = {
-            src: player ? whiteKing : blackKing,
-            alt: this.color + this.name,
-        }
+        this.icon = faChessKing
     }
 
     moves = (col: string, idx: number): string[] => {
@@ -206,14 +188,11 @@ export class King extends ChessPiece {
 export class Bishop extends ChessPiece {
     public name: PieceName = 'Bishop'
     public value = 4
-    public image: PieceImage
+    public icon: IconDefinition
 
     constructor(player: boolean, id: number) {
         super(player, id)
-        this.image = {
-            src: player ? whiteBishop : blackBishop,
-            alt: this.color + this.name,
-        }
+        this.icon = faChessBishop
     }
 
     moves = (col: string, idx: number): string[] => {
@@ -245,14 +224,11 @@ export class Bishop extends ChessPiece {
 export class Knight extends ChessPiece {
     public name: PieceName = 'Knight'
     public value = 3
-    public image: PieceImage
+    public icon: IconDefinition
 
     constructor(player: boolean, id: number) {
         super(player, id)
-        this.image = {
-            src: player ? whiteKnight : blackKnight,
-            alt: this.color + this.name,
-        }
+        this.icon = faChessKnight
     }
 
     moves = (col: string, idx: number): string[] => {
@@ -290,14 +266,11 @@ export class Knight extends ChessPiece {
 export class Rook extends ChessPiece {
     public name: PieceName = 'Rook'
     public value = 5
-    public image: PieceImage
+    public icon: IconDefinition
 
     constructor(player: boolean, id: number) {
         super(player, id)
-        this.image = {
-            src: player ? whiteRook : blackRook,
-            alt: this.color + this.name,
-        }
+        this.icon = faChessRook
     }
 
     moves = (col: string, idx: number): string[] => {
