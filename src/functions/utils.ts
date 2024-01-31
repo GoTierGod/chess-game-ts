@@ -86,6 +86,7 @@ export const isExposed = (
     next: PieceCoords,
     player: boolean
 ) => {
+    // Simulate the move of this piece
     const fantasyBoard = (() => {
         const mirrorBoard = deepCopy(board)
 
@@ -219,6 +220,27 @@ export const exposedKing = (
     }
 
     return null
+}
+
+// Determine if the next move will expose your own king
+export const isAutoExposing = (
+    board: Board,
+    current: SelectedPiece,
+    next: PieceCoords
+): boolean => {
+    // Simulate the move of this piece
+    const fantasyBoard = (() => {
+        const mirrorBoard = deepCopy(board)
+
+        mirrorBoard[current.col][current.idx] = null
+        mirrorBoard[next.col][next.idx] = current.piece
+
+        return mirrorBoard
+    })()
+
+    const exposed = exposedKing(fantasyBoard, current.piece.player)
+
+    return Boolean(exposed)
 }
 
 // Detect a tie
