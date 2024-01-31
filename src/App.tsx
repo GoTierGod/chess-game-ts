@@ -9,6 +9,7 @@ import {
     exposedKing,
     getMoveCol,
     getMoveIdx,
+    isAutoExposing,
     isExposed,
     isTied,
 } from './functions/utils'
@@ -173,6 +174,7 @@ export default function PvAI() {
             if (piece && piece.player) {
                 setValidMoves([])
 
+                // Update the selected piece
                 setSelected((prevSelected) => {
                     if (prevSelected !== null) {
                         prevSelected.ele.style.border = ''
@@ -191,39 +193,45 @@ export default function PvAI() {
                 })
 
                 setValidMoves(
-                    piece && piece.name === 'King'
+                    // For king
+                    piece.name === 'King'
                         ? [
-                              ...piece.moves(col, idx),
-                              ...piece.getCaptureMoves(board, { col, idx }),
-                          ]
-                              .filter(
-                                  (move) =>
-                                      !isExposed(
-                                          board,
-                                          { col, idx, piece },
-                                          {
-                                              col: getMoveCol(move),
-                                              idx: getMoveIdx(move),
-                                          },
-                                          true
-                                      )
-                              )
-                              .filter(
-                                  (move) =>
-                                      !(
-                                          board[getMoveCol(move)][
-                                              getMoveIdx(move)
-                                          ] as ChessPieceType
-                                      )?.player
-                              )
-                        : [
                               ...piece.moves(col, idx),
                               ...piece.getCaptureMoves(board, { col, idx }),
                           ].filter(
                               (move) =>
-                                  !piece?.isClogged(
+                                  !isExposed(
                                       board,
-                                      { col: col, idx: idx },
+                                      { col, idx, piece },
+                                      {
+                                          col: getMoveCol(move),
+                                          idx: getMoveIdx(move),
+                                      },
+                                      true
+                                  ) &&
+                                  !(
+                                      board[getMoveCol(move)][
+                                          getMoveIdx(move)
+                                      ] as ChessPieceType
+                                  )?.player
+                          )
+                        : // For other pieces
+                          [
+                              ...piece.moves(col, idx),
+                              ...piece.getCaptureMoves(board, { col, idx }),
+                          ].filter(
+                              (move) =>
+                                  !piece.isClogged(
+                                      board,
+                                      { col, idx },
+                                      {
+                                          col: getMoveCol(move),
+                                          idx: getMoveIdx(move),
+                                      }
+                                  ) &&
+                                  !isAutoExposing(
+                                      board,
+                                      { col, idx, piece },
                                       {
                                           col: getMoveCol(move),
                                           idx: getMoveIdx(move),
@@ -236,37 +244,9 @@ export default function PvAI() {
             else {
                 if (
                     selected &&
-                    (selected.piece.name === 'King'
-                        ? !isExposed(
-                              board,
-                              {
-                                  col: selected.col,
-                                  idx: selected.idx,
-                                  piece: selected.piece,
-                              },
-                              {
-                                  col,
-                                  idx,
-                              },
-                              true
-                          ) &&
-                          (nextPosition
-                              ? nextPosition.player !== true
-                              : true) &&
-                          validMoves.includes(col + idx)
-                        : selected.piece
-                              .moves(selected.col, selected.idx)
-                              .includes(col + idx) ||
-                          selected.piece
-                              .getCaptureMoves(board, {
-                                  col: selected.col,
-                                  idx: selected.idx,
-                              })
-                              .includes(col + idx)) &&
-                    !selected.piece?.isClogged(board, selected, {
-                        col: col,
-                        idx: idx,
-                    })
+                    winner === null &&
+                    (!exposed || !exposed.king.piece.player) &&
+                    validMoves.includes(col + idx)
                 ) {
                     setBoard((prevBoard) => {
                         const newBoard = deepCopy(board)
@@ -286,7 +266,7 @@ export default function PvAI() {
                 }
             }
         }
-        // Exposed king player turn
+        // Exposed player king move
         else if (
             turn &&
             selected &&
