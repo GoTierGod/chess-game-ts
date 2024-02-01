@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Board, columns, initialBoard } from './constants/board'
 import { PlayerAI, SelectedPiece } from './classes/AI'
 import {
-    countIn,
     deepCopy,
     getMoveCol,
     getMoveIdx,
@@ -14,14 +13,6 @@ import {
     exposingData,
 } from './functions/utils'
 import { Bishop, ChessPieceType, Knight, Queen, Rook } from './classes/pieces'
-import {
-    availableMoveStyle,
-    exposedKingStyle,
-    exposedPieceStyle,
-    innerAvailableMoveStyle,
-    innerRepeatedMoveStyle,
-    repeatedMoveStyle,
-} from './constants/styles'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -30,6 +21,7 @@ import {
     faChessKnight,
     faChessQueen,
     faChessRook,
+    faDiamond,
     faHandshake,
     faTrophy,
 } from '@fortawesome/free-solid-svg-icons'
@@ -98,38 +90,26 @@ export default function PvAI() {
                             className={style.endCell}
                             style={{ position: 'relative' }}
                         >
-                            <div
-                                style={
+                            <div className={style.cellDecoration}>
+                                {cell &&
+                                cell.name === 'King' &&
+                                !tie &&
+                                exposed &&
+                                exposed.king.piece.id === cell.id ? (
+                                    <FontAwesomeIcon
+                                        className={style.exposedKing}
+                                        icon={faDiamond}
+                                    />
+                                ) : (
                                     cell &&
-                                    cell.name === 'King' &&
-                                    !tie &&
-                                    exposed &&
-                                    exposed.king.piece.id === cell.id
-                                        ? {
-                                              ...exposedKingStyle,
-                                              backgroundColor: 'var(--green)',
-                                              width: '100%',
-                                              height: '100%',
-                                          }
-                                        : cell && tie && tie.piece.id == cell.id
-                                          ? {
-                                                ...exposedKingStyle,
-                                                backgroundColor: 'var(--green)',
-                                                width: '100%',
-                                                height: '100%',
-                                            }
-                                          : { display: 'none' }
-                                }
-                            >
-                                <div
-                                    style={
-                                        cell
-                                            ? {
-                                                  ...innerAvailableMoveStyle,
-                                              }
-                                            : { display: 'none' }
-                                    }
-                                />
+                                    tie &&
+                                    tie.piece.id == cell.id && (
+                                        <FontAwesomeIcon
+                                            className={style.exposedKing}
+                                            icon={faDiamond}
+                                        />
+                                    )
+                                )}
                             </div>
                             {cell && (
                                 <FontAwesomeIcon
@@ -606,43 +586,43 @@ export default function PvAI() {
                                         : null
                                 }
                             >
-                                <div
-                                    style={
-                                        exposed &&
-                                        exposed.king.piece.player &&
-                                        cell &&
+                                <div className={style.cellDecoration}>
+                                    {cell &&
                                         cell.player &&
-                                        cell.name === 'King'
-                                            ? exposedKingStyle
-                                            : validMoves.includes(col + idx)
-                                              ? selected?.piece.id ===
-                                                    repetition.player.piece
-                                                        ?.id &&
-                                                countIn(
-                                                    repetition.player.moves,
-                                                    col + idx
-                                                ) === 2
-                                                  ? repeatedMoveStyle
-                                                  : cell
-                                                    ? exposedPieceStyle
-                                                    : availableMoveStyle
-                                              : { display: 'none' }
-                                    }
-                                >
-                                    <div
-                                        style={
-                                            selected?.piece.id ===
-                                                repetition.player.piece?.id &&
-                                            countIn(
-                                                repetition.player.moves,
-                                                col + idx
-                                            ) === 2
-                                                ? innerRepeatedMoveStyle
-                                                : cell
-                                                  ? innerAvailableMoveStyle
-                                                  : { display: 'none' }
-                                        }
-                                    />
+                                        exposed &&
+                                        cell.id === exposed.king.piece.id && (
+                                            <FontAwesomeIcon
+                                                className={style.exposedKing}
+                                                icon={faDiamond}
+                                            />
+                                        )}
+                                    {cell &&
+                                        cell.player &&
+                                        exposed &&
+                                        cell.id !== exposed.king.piece.id &&
+                                        exposed.safes.find(
+                                            (selection) =>
+                                                selection.piece.piece.id ===
+                                                cell.id
+                                        ) && (
+                                            <FontAwesomeIcon
+                                                className={style.availablePiece}
+                                                icon={faDiamond}
+                                            />
+                                        )}
+                                    {!cell &&
+                                        validMoves.includes(col + idx) && (
+                                            <FontAwesomeIcon
+                                                className={style.standardMove}
+                                                icon={faDiamond}
+                                            />
+                                        )}
+                                    {cell && validMoves.includes(col + idx) && (
+                                        <FontAwesomeIcon
+                                            className={style.captureMove}
+                                            icon={faDiamond}
+                                        />
+                                    )}
                                 </div>
                                 {cell && (
                                     <FontAwesomeIcon

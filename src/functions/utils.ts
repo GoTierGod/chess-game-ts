@@ -296,7 +296,8 @@ export const exposingData = (
             })
         }
 
-        if (king) return { king, safes }
+        if (king)
+            return { king, safes: safes.filter((safe) => safe.moves.length) }
         else throw new Error('King not found')
     }
 

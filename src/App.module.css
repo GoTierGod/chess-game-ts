@@ -70,30 +70,72 @@
     cursor: pointer;
 }
 
-.cell svg {
+.cell > svg {
     width: auto;
 
     height: 1.25rem;
 
-    z-index: 5;
+    z-index: 10;
 }
 
-.cell svg path {
+.cell > svg path {
     stroke: var(--darker-green);
     stroke-width: 1rem;
 }
 
-.endCell svg {
+.endCell > svg {
     width: auto;
 
     height: 1rem;
 
+    z-index: 10;
+}
+
+.endCell > svg path {
+    stroke: var(--darker-green);
+    stroke-width: 1rem;
+}
+
+.cellDecoration {
+    position: absolute;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
     z-index: 5;
 }
 
-.endCell svg path {
-    stroke: var(--darker-green);
-    stroke-width: 1rem;
+.exposedKing {
+    height: 1.5rem;
+
+    color: var(--darkgray);
+    stroke: var(--green);
+    stroke-width: 1.5rem;
+}
+
+.availablePiece {
+    height: 1.25rem;
+
+    color: var(--green);
+    stroke: var(--darkgray);
+    stroke-width: 1.5rem;
+}
+
+.standardMove {
+    height: 0.5rem;
+
+    color: var(--green);
+    stroke: var(--darkgray);
+    stroke-width: 3rem;
+}
+
+.captureMove {
+    height: 1.25rem;
+
+    color: var(--green);
+    stroke: var(--darkgray);
+    stroke-width: 1.5rem;
 }
 
 :where(.col, .endCol):nth-child(odd) :where(.cell, .endCell):nth-child(odd) {
@@ -244,21 +286,53 @@
 }
 
 @media screen and (min-width: 375px) {
-    .cell svg {
+    .cell > svg {
         height: 1.5rem;
     }
 
-    .endCell svg {
+    .endCell > svg {
         height: 1.25rem;
+    }
+
+    .exposedKing {
+        height: 1.75rem;
+    }
+
+    .availablePiece {
+        height: 1.5rem;
+    }
+
+    .standardMove {
+        height: 0.75rem;
+    }
+
+    .captureMove {
+        height: 1.5rem;
     }
 }
 
 @media screen and (min-width: 425px) {
-    .cell svg {
+    .cell > svg {
         height: 2rem;
     }
 
-    .endCell svg {
+    .endCell > svg {
         height: 1.5rem;
+    }
+
+    .exposedKing {
+        height: 2.25rem;
+    }
+
+    .availablePiece {
+        height: 2rem;
+    }
+
+    .standardMove {
+        height: 1rem;
+    }
+
+    .captureMove {
+        height: 2rem;
     }
 }
