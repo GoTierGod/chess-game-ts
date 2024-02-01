@@ -1,6 +1,12 @@
 import { repetition } from '../App'
 import { players, columns, Board } from '../constants/board'
-import { deepCopy, getMoveCol, getMoveIdx, isExposed } from '../functions/utils'
+import {
+    deepCopy,
+    getAllPlayerMoves,
+    getMoveCol,
+    getMoveIdx,
+    isExposed,
+} from '../functions/utils'
 import { ChessPieceType, PieceCoords, Queen } from './pieces'
 
 export interface SelectedPiece {
@@ -409,11 +415,9 @@ export class PlayerAI {
         board: Board,
         coronation: SelectedPiece | null,
         repetition: { ai: repetition; player: repetition },
-        safe: boolean,
         exposed: null | {
             king: SelectedPiece
-            captures: SelectedPiece[]
-            safes: string[]
+            safes: { piece: SelectedPiece; moves: string[] }[]
         },
         setBoard: React.Dispatch<React.SetStateAction<Board>>,
         setTurnCount: React.Dispatch<React.SetStateAction<number>>,
@@ -424,16 +428,10 @@ export class PlayerAI {
             player: boolean
         ) => void
     ) => {
-        // Remaining AI pieces on the board
-        const remaining = columns
-            .map((col) => {
-                let ct = 0
-                for (const square of board[col]) {
-                    if (square && !square.player) ct++
-                }
-                return ct
-            })
-            .reduce((a, b) => a + b)
+        // Remaining AI pieces and moves
+        const available: { piece: SelectedPiece; moves: string[] }[] = exposed
+            ? exposed.safes
+            : getAllPlayerMoves(board, false)
         // Moves ranking from best to worst
         const ranking: {
             selected: SelectedPiece
@@ -443,71 +441,21 @@ export class PlayerAI {
         // List of blacklisted pieces IDs (pieces already checked by the algorithm)
         const blacklist: number[] = []
 
-        // Safe move action
-        const safeMoveAction = () => {
-            if (exposed) {
-                // Exposed king piece
-                const selected = exposed.king
-                // Exposed king safe moves
-                const safeMoves = exposed.safes.sort((a, b) => {
-                    const [colA, idxA] = [getMoveCol(a), getMoveIdx(a)]
-                    const [colB, idxB] = [getMoveCol(b), getMoveIdx(b)]
-
-                    const positionA = board[colA][idxA]
-                    const positionB = board[colB][idxB]
-
-                    if (positionA && positionB) {
-                        if (positionA.value > positionB.value) return -1
-                        else if (positionA.value < positionB.value) return 1
-                    }
-                    return 0
-                })
-
-                // Rate safe moves of the exposed king
-                if (safeMoves.length) {
-                    for (const move of safeMoves) {
-                        const col = getMoveCol(move)
-                        const idx = getMoveIdx(move)
-
-                        ranking.push({
-                            selected,
-                            move,
-                            score: this.#deepPredict(
-                                board,
-                                { col, idx },
-                                selected
-                            ),
-                        })
-                    }
-                }
-
-                // Make the best move
-                this.#move(board, repetition, ranking, setBoard, addRepetition)
-            }
-        }
-
         // Standard move action
         const moveAction = () => {
-            if (blacklist.length < remaining) {
+            if (blacklist.length < available.length) {
                 // Select a random piece
                 const selectRandomPiece = (): SelectedPiece => {
-                    const col =
-                        columns[
-                            Math.round(Math.random() * (columns.length - 1))
+                    const select =
+                        available[
+                            Math.round(Math.random() * (available.length - 1))
                         ]
-                    const idx = Math.round(Math.random() * 7)
-                    const current = board[col][idx]
-
                     if (
-                        current &&
-                        !current.player &&
-                        !blacklist.includes(current?.id)
+                        select &&
+                        !select.piece.piece.player &&
+                        !blacklist.includes(select.piece.piece.id)
                     ) {
-                        return {
-                            col: col,
-                            idx: idx,
-                            piece: current,
-                        }
+                        return select.piece
                     } else return selectRandomPiece()
                 }
                 // Randomly selected piece
@@ -625,8 +573,7 @@ export class PlayerAI {
             }
         }
 
-        if (safe) safeMoveAction()
-        else moveAction()
+        moveAction()
 
         setTurnCount((prevTurnCount) => prevTurnCount + 1)
 

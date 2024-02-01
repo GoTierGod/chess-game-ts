@@ -79,6 +79,43 @@ export const deepCopy = <T>(obj: T): T => {
     return copy
 }
 
+export const getAllPlayerMoves = (
+    board: Board,
+    player: boolean
+): { piece: SelectedPiece; moves: string[] }[] => {
+    const pieces: SelectedPiece[] = []
+
+    for (const col of columns) {
+        for (const cell of board[col]) {
+            if (cell && cell.player === player) {
+                pieces.push({
+                    piece: cell,
+                    col: col,
+                    idx: board[col].indexOf(cell),
+                })
+            }
+        }
+    }
+
+    const allMoves: { piece: SelectedPiece; moves: string[] }[] = []
+    for (const piece of pieces) {
+        const moves = [
+            ...piece.piece.moves(piece.col, piece.idx),
+            ...piece.piece.getCaptureMoves(board, {
+                col: piece.col,
+                idx: piece.idx,
+            }),
+        ]
+
+        allMoves.push({
+            piece: piece,
+            moves: moves,
+        })
+    }
+
+    return allMoves
+}
+
 // Detect if the next position will expose the a piece
 export const isExposed = (
     board: Board,
@@ -131,15 +168,8 @@ export const isExposed = (
     return false
 }
 
-// Detect an exposed king
-export const exposedKing = (
-    board: Board,
-    player: boolean
-): null | {
-    king: SelectedPiece
-    captures: SelectedPiece[]
-    safes: string[]
-} => {
+// Detect if a king is currently exposed
+export const isKingExposed = (board: Board, player: boolean): boolean => {
     // Locate the player king
     const kingPosition = (() => {
         for (const column of columns) {
@@ -188,38 +218,11 @@ export const exposedKing = (
                 captures.push({ col: thisCol, idx: thisIdx, piece: piece })
         }
 
-        // King safe moves
-        const king = board[col][idx] as ChessPieceType
-        const kingMoves = king.moves(col, idx)
-        const safeMoves = kingMoves
-            .filter(
-                (move) =>
-                    !isExposed(
-                        board,
-                        { col: col, idx: idx, piece: king },
-                        { col: getMoveCol(move), idx: getMoveIdx(move) },
-                        player
-                    )
-            )
-            .filter((move) => {
-                const movePosition = board[getMoveCol(move)][getMoveIdx(move)]
-
-                return (
-                    (movePosition && movePosition.player !== player) ||
-                    !movePosition
-                )
-            })
-
         // Return necessary data
-        if (captures.length)
-            return {
-                king: { col, idx, piece: king },
-                captures,
-                safes: safeMoves,
-            }
+        if (captures.length) return true
     }
 
-    return null
+    return false
 }
 
 // Determine if the next move will expose your own king
@@ -238,9 +241,66 @@ export const isAutoExposing = (
         return mirrorBoard
     })()
 
-    const exposed = exposedKing(fantasyBoard, current.piece.player)
+    return isKingExposed(fantasyBoard, current.piece.player)
+}
 
-    return Boolean(exposed)
+// Detect an exposed king and safes moves to escape
+export const exposingData = (
+    board: Board,
+    player: boolean
+): null | {
+    king: SelectedPiece
+    safes: { piece: SelectedPiece; moves: string[] }[]
+} => {
+    if (isKingExposed(board, player)) {
+        const availables: { piece: SelectedPiece; moves: string[] }[] =
+            getAllPlayerMoves(board, player)
+        let king: SelectedPiece | null = null
+
+        for (const col of columns) {
+            for (const cell of board[col]) {
+                if (cell && cell.player === player) {
+                    if (cell.name === 'King')
+                        king = {
+                            piece: cell,
+                            col: col,
+                            idx: board[col].indexOf(cell),
+                        }
+                }
+            }
+        }
+
+        const safes: { piece: SelectedPiece; moves: string[] }[] = []
+        for (const available of availables) {
+            safes.push({
+                piece: available.piece,
+                moves: available.moves
+                    .filter(
+                        (move) =>
+                            !isAutoExposing(board, available.piece, {
+                                col: getMoveCol(move),
+                                idx: getMoveIdx(move),
+                            })
+                    )
+                    .filter(
+                        (move) =>
+                            !available.piece.piece.isClogged(
+                                board,
+                                {
+                                    col: available.piece.col,
+                                    idx: available.piece.idx,
+                                },
+                                { col: getMoveCol(move), idx: getMoveIdx(move) }
+                            )
+                    ),
+            })
+        }
+
+        if (king) return { king, safes }
+        else throw new Error('King not found')
+    }
+
+    return null
 }
 
 // Detect a tie

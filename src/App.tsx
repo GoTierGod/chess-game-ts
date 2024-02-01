@@ -6,21 +6,14 @@ import { PlayerAI, SelectedPiece } from './classes/AI'
 import {
     countIn,
     deepCopy,
-    exposedKing,
     getMoveCol,
     getMoveIdx,
     isAutoExposing,
     isExposed,
     isTied,
+    exposingData,
 } from './functions/utils'
-import {
-    Bishop,
-    ChessPieceType,
-    Knight,
-    // PieceCoords,
-    Queen,
-    Rook,
-} from './classes/pieces'
+import { Bishop, ChessPieceType, Knight, Queen, Rook } from './classes/pieces'
 import {
     availableMoveStyle,
     exposedKingStyle,
@@ -89,8 +82,7 @@ export default function PvAI() {
     const [exposed, setExposed] = useState(
         null as null | {
             king: SelectedPiece
-            captures: SelectedPiece[]
-            safes: string[]
+            safes: { piece: SelectedPiece; moves: string[] }[]
         }
     )
     // Player king ref
@@ -163,36 +155,62 @@ export default function PvAI() {
         idx: number,
         piece: null | ChessPieceType
     ) => {
-        const nextPosition = board[col][idx]
         // Standard player turn
-        if (
-            turn &&
-            winner === null &&
-            (!exposed || !exposed.king.piece.player)
-        ) {
+        if (turn && winner === null) {
             // Standard player piece selection
             if (piece && piece.player) {
                 setValidMoves([])
+                const safeSelection: null | {
+                    piece: SelectedPiece
+                    moves: string[]
+                } = exposed
+                    ? (() => {
+                          const found = exposed?.safes.find(
+                              (selection) =>
+                                  selection.piece.piece.id === piece.id
+                          )
+                          return found || null
+                      })()
+                    : null
 
                 // Update the selected piece
-                setSelected((prevSelected) => {
-                    if (prevSelected !== null) {
-                        prevSelected.ele.style.border = ''
-                        prevSelected.ele.style.backgroundColor = ''
-                    }
+                if (exposed && safeSelection) {
+                    setSelected((prevSelected) => {
+                        if (prevSelected !== null) {
+                            prevSelected.ele.style.border = ''
+                            prevSelected.ele.style.backgroundColor = ''
+                        }
 
-                    element.style.border = '2px solid var(--dark)'
-                    element.style.backgroundColor = 'var(--gray)'
+                        element.style.border = '2px solid var(--dark)'
+                        element.style.backgroundColor = 'var(--gray)'
 
-                    return {
-                        ele: element,
-                        col: col,
-                        idx: idx,
-                        piece: piece,
-                    }
-                })
+                        return {
+                            ele: element,
+                            col: safeSelection.piece.col,
+                            idx: safeSelection.piece.idx,
+                            piece: safeSelection.piece.piece,
+                        }
+                    })
+                } else if (!exposed) {
+                    setSelected((prevSelected) => {
+                        if (prevSelected !== null) {
+                            prevSelected.ele.style.border = ''
+                            prevSelected.ele.style.backgroundColor = ''
+                        }
 
-                setValidMoves(
+                        element.style.border = '2px solid var(--dark)'
+                        element.style.backgroundColor = 'var(--gray)'
+
+                        return {
+                            ele: element,
+                            col: col,
+                            idx: idx,
+                            piece: piece,
+                        }
+                    })
+                }
+
+                const availableMoves: string[] = (() =>
                     // For king
                     piece.name === 'King'
                         ? [
@@ -237,15 +255,17 @@ export default function PvAI() {
                                           idx: getMoveIdx(move),
                                       }
                                   )
-                          )
-                )
+                          ))()
+
+                exposed && safeSelection
+                    ? setValidMoves(safeSelection.moves)
+                    : setValidMoves(availableMoves)
             }
             // Standard player piece move
             else {
                 if (
                     selected &&
                     winner === null &&
-                    (!exposed || !exposed.king.piece.player) &&
                     validMoves.includes(col + idx)
                 ) {
                     setBoard((prevBoard) => {
@@ -266,43 +286,14 @@ export default function PvAI() {
                 }
             }
         }
-        // Exposed player king move
-        else if (
-            turn &&
-            selected &&
-            winner === null &&
-            exposed &&
-            exposed.king.piece.player &&
-            exposed.safes.length &&
-            (nextPosition ? nextPosition.player !== true : true) &&
-            validMoves.includes(col + idx)
-        ) {
-            setBoard((prevBoard) => {
-                const newBoard = deepCopy(board)
-
-                newBoard[selected.col] = [...prevBoard[selected.col]]
-                newBoard[selected.col][selected.idx] = null
-                newBoard[col][idx] = selected.piece
-
-                return newBoard
-            })
-
-            selected.ele.style.border = ''
-            selected.ele.style.backgroundColor = ''
-
-            addRepetition(selected.piece, col + idx, true)
-            setTurnCount((prevTurnCount) => prevTurnCount + 1)
-        }
     }
 
     // Method - Execute the AI actions
     const executeAI = (
-        safe: boolean,
-        exposed: {
+        exposed: null | {
             king: SelectedPiece
-            captures: SelectedPiece[]
-            safes: string[]
-        } | null
+            safes: { piece: SelectedPiece; moves: string[] }[]
+        }
     ) => {
         if (!turn && !selected && winner === null && !tie) {
             setTimeout(() => {
@@ -310,7 +301,6 @@ export default function PvAI() {
                     board,
                     coronation,
                     repetition,
-                    safe,
                     exposed,
                     setBoard,
                     setTurnCount,
@@ -463,18 +453,18 @@ export default function PvAI() {
 
     // Detect a exposed king and execute the AI turn
     useEffect(() => {
-        const ekPlayer = exposedKing(board, true)
-        const ekAi = exposedKing(board, false)
+        const ekPlayer = exposingData(board, true)
+        const ekAi = exposingData(board, false)
 
         if (ekPlayer) {
             setExposed(ekPlayer)
-            executeAI(false, ekPlayer)
+            executeAI(ekPlayer)
         } else if (ekAi) {
             setExposed(ekAi)
-            executeAI(true, ekAi)
+            executeAI(ekAi)
         } else {
             setExposed(null)
-            executeAI(false, ekPlayer)
+            executeAI(ekPlayer)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
@@ -571,9 +561,9 @@ export default function PvAI() {
         repetition.player.moves,
     ])
 
-    // useEffect(() => {
-    //     console.log(exposed)
-    // }, [exposed])
+    useEffect(() => {
+        console.log(exposed)
+    }, [exposed])
 
     // // Log winner
     // useEffect(() => {
