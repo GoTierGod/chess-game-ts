@@ -79,6 +79,7 @@ export const deepCopy = <T>(obj: T): T => {
     return copy
 }
 
+// All player pieces with all its available moves
 export const getAllPlayerMoves = (
     board: Board,
     player: boolean
