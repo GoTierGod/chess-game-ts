@@ -13,6 +13,7 @@ export const getMoveCol = (move: string) => {
     return col[0]
 }
 
+// Identify index in a move string
 export const getMoveIdx = (move: string) => {
     const idx = move.match(/\d/)
 
@@ -126,10 +127,11 @@ export const getAllPlayerMoves = (
                     : true)
         )
 
-        allMoves.push({
-            piece: piece,
-            moves: moves,
-        })
+        if (moves.length)
+            allMoves.push({
+                piece: piece,
+                moves: moves,
+            })
     }
 
     return allMoves
@@ -328,7 +330,19 @@ export const isTied = (
     board: Board,
     player: boolean
 ): null | { piece: ChessPieceType; reason: string } => {
-    const allPlayerMoves = getAllPlayerMoves(board, player)
+    // Count available piece types in a list of pieces and its moves
+    const countAvailables = (
+        availables: { piece: SelectedPiece; moves: string[] }[],
+        type: 'King' | 'Queen' | 'Bishop' | 'Knight' | 'Rook' | 'Pawn'
+    ): number => {
+        return availables.filter((a) => a.piece.piece.name === type).length
+    }
+
+    // All ally pieces and its moves
+    const allAllyMoves = getAllPlayerMoves(board, player)
+    // All AI and player pieces and its moves
+    const allMoves = [...allAllyMoves, ...getAllPlayerMoves(board, !player)]
+
     let king: null | ChessPieceType = null
 
     for (const col of columns) {
@@ -339,12 +353,53 @@ export const isTied = (
         }
     }
 
-    console.log(allPlayerMoves)
     if (king) {
-        for (const piece of allPlayerMoves) {
-            if (piece.moves.length) return null
+        // Checking for insufficient material
+        if (allMoves.length) {
+            const insufficientMaterial = {
+                piece: king,
+                reason: `Insufficient material`,
+            }
+
+            switch (true) {
+                // king - king
+                case allMoves.length === 2 &&
+                    countAvailables(allMoves, 'King') === 2:
+                    return insufficientMaterial
+                // king & knight - king
+                case allMoves.length === 3 &&
+                    countAvailables(allMoves, 'King') === 2 &&
+                    countAvailables(allMoves, 'Knight') === 1:
+                    return insufficientMaterial
+                // king & bishop - king
+                case allMoves.length === 3 &&
+                    countAvailables(allMoves, 'King') === 2 &&
+                    countAvailables(allMoves, 'Bishop') === 1:
+                    return insufficientMaterial
+                // king & bishops - king
+                case allMoves.length === 4 &&
+                    countAvailables(allMoves, 'King') === 2 &&
+                    countAvailables(allMoves, 'Bishop') === 2:
+                    return insufficientMaterial
+                // king & bishops - king & bishop
+                case allMoves.length === 5 &&
+                    countAvailables(allMoves, 'King') === 2 &&
+                    countAvailables(allMoves, 'Bishop') === 3:
+                    return insufficientMaterial
+                // king & bishops - king &
+                case allMoves.length === 6 &&
+                    countAvailables(allMoves, 'King') === 2 &&
+                    countAvailables(allMoves, 'Bishop') === 4:
+                    return insufficientMaterial
+                default:
+                    break
+            }
         }
 
+        // Checking if there is no tie
+        if (allAllyMoves.length) return null
+
+        // A player has no legal moves
         return {
             piece: king,
             reason: `The ${player ? 'Player' : 'AI'} has no legal moves`,

@@ -139,10 +139,10 @@ export interface Board {
     [key: string]: (ChessPieceType | null)[]
 }
 
-// Board to check if there is a tie because there are no moves available
+// Modified board to check for certain conditions
 // export const modifiedBoard: Board = {
 //     a: [null, null, null, null, null, null, null, players.black.king],
-//     b: [null, null, null, null, null, players.white.queen, null, null],
+//     b: [null, null, null, null, players.white.knight1, null, null, null],
 //     c: [null, null, null, null, null, null, null, players.white.king],
 //     d: [null, null, null, null, null, null, null, null],
 //     e: [null, null, null, null, null, null, null, null],
