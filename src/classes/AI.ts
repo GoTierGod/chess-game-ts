@@ -294,28 +294,39 @@ export class PlayerAI {
         prevScore: null | number = null,
         prevDeep: null | number = null
     ) => {
+        // Set score, deep and captured
         let score = prevScore || 0
         let deep = prevDeep || 0
-        const eaten = board[next.col][next.idx]
+        const captured = board[next.col][next.idx]
 
-        const defPredict = this.#defPredict(board, next, selected, eaten)
+        // Perform a defensive prediction
+        const defPredict = this.#defPredict(board, next, selected, captured)
             // From lower to higher (pessimistic expectation)
             .sort((a, b) => a.from.piece.value - b.from.piece.value)
 
+        // Perform a offensive prediction if the defensive prediction gave results
         const ofPredict = defPredict.length
             ? this.#ofPredict(board, next, selected, defPredict[0].from)
                   // From higher to lower (optimistic expectation)
                   .sort((a, b) => b.from.piece.value - a.from.piece.value)
             : []
+
+        // Sum the scores of the pessimistic defensive prediction and the optimistic offensive prediction
         const scores = (defPredict[0]?.score || 0) + (ofPredict[0]?.score || 0)
+
+        // If this is piece is exposing the enemy king and is not exposing itself increase the score
         const isExposing = this.#expPredict(board, next, selected)
         if (isExposing.exposing && !isExposing.exposed) score += 1000
 
-        if (scores === 0) score += eaten ? eaten.value : -1
+        // If the predictions scores sums 0, add the value of the captured piece (if there is one)
+        // Otherwise add the value of the predictions scores
+        if (scores === 0) score += captured ? captured.value : -1
         else score += scores
 
+        // After perform predictions increase the deepth of this deep prediction
         deep += 1
 
+        // If the offensive prediction gave results, call this method again limiting the max deepth
         const lastPredict = ofPredict[0]
         if (lastPredict && deep < 32) {
             this.#deepPredict(
@@ -330,6 +341,7 @@ export class PlayerAI {
             )
         }
 
+        // If the offensive prediction gave no results, return the score of this deep prediction
         return score
     }
 

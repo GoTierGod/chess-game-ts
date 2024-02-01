@@ -518,8 +518,6 @@ export default function PvAI() {
             }
         })
 
-        console.log(counters)
-
         for (const move of Object.keys(counters)) {
             if (counters[move].ct >= 3) {
                 const piece = counters[move].player
@@ -543,9 +541,9 @@ export default function PvAI() {
         repetition.player.moves,
     ])
 
-    useEffect(() => {
-        console.log(repetition)
-    }, [repetition])
+    // useEffect(() => {
+    //     console.log(repetition)
+    // }, [repetition])
 
     // useEffect(() => {
     //     console.log(exposed)
