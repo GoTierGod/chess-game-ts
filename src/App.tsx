@@ -11,6 +11,7 @@ import {
     isExposed,
     isTied,
     exposingData,
+    countIn,
 } from './functions/utils'
 import { Bishop, ChessPieceType, Knight, Queen, Rook } from './classes/pieces'
 
@@ -499,39 +500,40 @@ export default function PvAI() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [turn])
 
-    // Detect tied for repetitions
+    // Detect ties due to repetitions
     useEffect(() => {
         const counters: { [key: string]: { player: boolean; ct: number } } = {}
 
-        repetition.player.moves.forEach(
-            (move) =>
-                (counters['player' + move] = {
-                    player: true,
-                    ct: (counters[move]?.ct || 0) + 1,
-                })
-        )
-
-        repetition.ai.moves.forEach(
-            (move) =>
-                (counters['ai-' + move] = {
-                    player: false,
-                    ct: (counters[move]?.ct || 0) + 1,
-                })
-        )
-
-        for (const move of Object.keys(counters))
-            if (counters[move].ct >= 3) {
-                if (counters[move].player)
-                    setTie({
-                        piece: repetition.player.piece as ChessPieceType,
-                        reason: `Player ${repetition.player.piece?.name} repeated a specific position too many times`,
-                    })
-                else
-                    setTie({
-                        piece: repetition.ai.piece as ChessPieceType,
-                        reason: `AI ${repetition.ai.piece?.name} repeated a specific position too many times`,
-                    })
+        repetition.player.moves.forEach((move) => {
+            counters['player-' + move] = {
+                player: true,
+                ct: (counters['player-' + move]?.ct || 0) + 1,
             }
+        })
+
+        repetition.ai.moves.forEach((move) => {
+            counters['ai-' + move] = {
+                player: false,
+                ct: (counters['ai-' + move]?.ct || 0) + 1,
+            }
+        })
+
+        console.log(counters)
+
+        for (const move of Object.keys(counters)) {
+            if (counters[move].ct >= 3) {
+                const piece = counters[move].player
+                    ? repetition.player.piece
+                    : repetition.ai.piece
+
+                const playerName = counters[move].player ? 'Player' : 'AI'
+
+                setTie({
+                    piece: piece as ChessPieceType,
+                    reason: `${playerName} ${piece?.name} repeated a specific position too many times`,
+                })
+            }
+        }
     }, [
         repetition.ai,
         repetition.ai.piece,
@@ -542,8 +544,12 @@ export default function PvAI() {
     ])
 
     useEffect(() => {
-        console.log(exposed)
-    }, [exposed])
+        console.log(repetition)
+    }, [repetition])
+
+    // useEffect(() => {
+    //     console.log(exposed)
+    // }, [exposed])
 
     // // Log winner
     // useEffect(() => {
@@ -611,18 +617,37 @@ export default function PvAI() {
                                             />
                                         )}
                                     {!cell &&
-                                        validMoves.includes(col + idx) && (
+                                        validMoves.includes(col + idx) &&
+                                        countIn(
+                                            repetition.player.moves,
+                                            col + idx
+                                        ) < 2 && (
                                             <FontAwesomeIcon
                                                 className={style.standardMove}
                                                 icon={faDiamond}
                                             />
                                         )}
-                                    {cell && validMoves.includes(col + idx) && (
-                                        <FontAwesomeIcon
-                                            className={style.captureMove}
-                                            icon={faDiamond}
-                                        />
-                                    )}
+                                    {cell &&
+                                        validMoves.includes(col + idx) &&
+                                        countIn(
+                                            repetition.player.moves,
+                                            col + idx
+                                        ) < 2 && (
+                                            <FontAwesomeIcon
+                                                className={style.captureMove}
+                                                icon={faDiamond}
+                                            />
+                                        )}
+                                    {validMoves.includes(col + idx) &&
+                                        countIn(
+                                            repetition.player.moves,
+                                            col + idx
+                                        ) === 2 && (
+                                            <FontAwesomeIcon
+                                                className={style.repeatedMove}
+                                                icon={faDiamond}
+                                            />
+                                        )}
                                 </div>
                                 {cell && (
                                     <FontAwesomeIcon

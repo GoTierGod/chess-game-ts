@@ -309,48 +309,27 @@ export const isTied = (
     board: Board,
     player: boolean
 ): null | { piece: ChessPieceType; reason: string } => {
-    let tied = true
+    const allPlayerMoves = getAllPlayerMoves(board, player)
+    let king: null | ChessPieceType = null
 
-    const pieces: SelectedPiece[] = []
     for (const col of columns) {
-        for (let idx = 0; idx < board[col].length; idx++) {
-            const cell = board[col][idx]
-            if (cell && cell.player === player)
-                pieces.push({ col, idx, piece: cell })
+        for (const cell of board[col]) {
+            if (cell && cell.name === 'King' && cell.player === player) {
+                king = cell
+            }
         }
     }
 
-    for (const piece of pieces) {
-        let moves = piece.piece
-            .moves(piece.col, piece.idx)
-            .filter(
-                (move) =>
-                    !piece.piece.isClogged(
-                        board,
-                        { col: piece.col, idx: piece.idx },
-                        { col: getMoveCol(move), idx: getMoveIdx(move) }
-                    )
-            )
-
-        if (piece.piece.name === 'King')
-            moves = moves.filter((move) =>
-                isExposed(
-                    board,
-                    piece,
-                    { col: getMoveCol(move), idx: getMoveIdx(move) },
-                    player
-                )
-            )
-
-        if (moves.length) tied = false
+    if (king) {
+        if (!allPlayerMoves.length)
+            return {
+                piece: king,
+                reason: `The ${player ? 'Player' : 'AI'} has no legal moves`,
+            }
+        return null
     }
 
-    if (tied)
-        return {
-            piece: pieces[pieces.length - 1].piece,
-            reason: `The ${player ? 'Player' : 'AI'} has no legal moves`,
-        }
-    return null
+    throw new Error(`The ${player ? 'Player' : 'AI'} king was not found`)
 }
 
 // Count how many times a string is repeated in a list of strings

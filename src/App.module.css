@@ -138,6 +138,14 @@
     stroke-width: 1.5rem;
 }
 
+.repeatedMove {
+    height: 0.5rem;
+
+    color: var(--darkgray);
+    stroke: var(--green);
+    stroke-width: 3rem;
+}
+
 :where(.col, .endCol):nth-child(odd) :where(.cell, .endCell):nth-child(odd) {
     background-color: var(--light-green);
 }
@@ -309,6 +317,10 @@
     .captureMove {
         height: 1.5rem;
     }
+
+    .repeatedMove {
+        height: 0.75rem;
+    }
 }
 
 @media screen and (min-width: 425px) {
@@ -334,5 +346,9 @@
 
     .captureMove {
         height: 2rem;
+    }
+
+    .repeatedMove {
+        height: 1rem;
     }
 }
