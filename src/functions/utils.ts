@@ -106,7 +106,25 @@ export const getAllPlayerMoves = (
                 col: piece.col,
                 idx: piece.idx,
             }),
-        ]
+        ].filter(
+            (move) =>
+                !piece.piece.isClogged(
+                    board,
+                    {
+                        col: piece.col,
+                        idx: piece.idx,
+                    },
+                    { col: getMoveCol(move), idx: getMoveIdx(move) }
+                ) &&
+                (piece.piece.name === 'King'
+                    ? !isExposed(
+                          board,
+                          piece,
+                          { col: getMoveCol(move), idx: getMoveIdx(move) },
+                          player
+                      )
+                    : true)
+        )
 
         allMoves.push({
             piece: piece,
@@ -321,13 +339,16 @@ export const isTied = (
         }
     }
 
+    console.log(allPlayerMoves)
     if (king) {
-        if (!allPlayerMoves.length)
-            return {
-                piece: king,
-                reason: `The ${player ? 'Player' : 'AI'} has no legal moves`,
-            }
-        return null
+        for (const piece of allPlayerMoves) {
+            if (piece.moves.length) return null
+        }
+
+        return {
+            piece: king,
+            reason: `The ${player ? 'Player' : 'AI'} has no legal moves`,
+        }
     }
 
     throw new Error(`The ${player ? 'Player' : 'AI'} king was not found`)
