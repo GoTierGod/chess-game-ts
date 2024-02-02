@@ -80,6 +80,34 @@ export const deepCopy = <T>(obj: T): T => {
     return copy
 }
 
+// Format time in hh:mmm:ss
+export const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const remainingSeconds = seconds % 60
+
+    let formattedTime = ''
+
+    hours > 0 && (formattedTime += String(hours).padStart(2, '0') + ':')
+    minutes > 0 && (formattedTime += String(minutes).padStart(2, '0') + ':')
+    formattedTime += String(remainingSeconds).padStart(2, '0')
+
+    return formattedTime
+}
+
+// Count player remaining pieces
+export const countRemainingPieces = (board: Board, player: boolean) => {
+    let ct = 0
+
+    for (const col of columns) {
+        for (const cell of board[col]) {
+            if (cell && cell.player === player) ct++
+        }
+    }
+
+    return ct
+}
+
 // All player pieces with all its available moves
 export const getAllPlayerMoves = (
     board: Board,

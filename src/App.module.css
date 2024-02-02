@@ -9,6 +9,50 @@
 
     min-width: 100vw;
     width: 100%;
+
+    user-select: none;
+}
+
+.header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.header span {
+    font-weight: 500;
+}
+
+.playerPieces,
+.chronometer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.chronometer span:nth-child(1) {
+    font-size: 1.25rem;
+}
+
+.chronometer span:nth-child(2) {
+    font-size: 0.75rem;
+}
+
+.playerPieces > span {
+    font-size: 0.75rem;
+}
+
+.playerPieces div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.playerPieces div span {
+    font-size: 1.25rem;
 }
 
 .board,
@@ -26,8 +70,6 @@
     background: var(--green);
 
     aspect-ratio: 1/1;
-
-    user-select: none;
 
     overflow: hidden;
     border-radius: 2px;
@@ -294,6 +336,10 @@
 }
 
 @media screen and (min-width: 375px) {
+    .header {
+        gap: 3rem;
+    }
+
     .cell > svg {
         height: 1.5rem;
     }

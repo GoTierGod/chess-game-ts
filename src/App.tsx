@@ -12,6 +12,8 @@ import {
     isTied,
     exposingData,
     countIn,
+    formatTime,
+    countRemainingPieces,
 } from './functions/utils'
 import { Bishop, ChessPieceType, Knight, Queen, Rook } from './classes/pieces'
 
@@ -20,6 +22,7 @@ import {
     faBrain,
     faChessBishop,
     faChessKnight,
+    faChessPawn,
     faChessQueen,
     faChessRook,
     faDiamond,
@@ -41,6 +44,8 @@ const winnerIcon = <FontAwesomeIcon icon={faTrophy} className={style.endIcon} />
 const playerAI = new PlayerAI()
 
 export default function PvAI() {
+    // Time of the current match
+    const [chronometer, setChronometer] = useState(0)
     // State that represents consecutive moves of a piece to detect position repetitions
     const [repetition, setRepetition] = useState({
         ai: { piece: null, moves: [] },
@@ -397,29 +402,6 @@ export default function PvAI() {
         }
     }
 
-    // Method - Reset the game
-    const resetBoard = () => {
-        setBoard(initialBoard)
-        setTurn(true)
-        setTurnCount(1)
-        setCoronation(null)
-        setWinner(null)
-        setTie(null)
-        setSelected(null)
-        setValidMoves([])
-        setExposed(null)
-        setRepetition({
-            ai: { piece: null, moves: [] },
-            player: { piece: null, moves: [] },
-        })
-
-        const element = playerKingRef.current
-        if (element) {
-            element.style.border = ''
-            element.style.backgroundColor = ''
-        }
-    }
-
     // Change turn and reset valid moves, selected and exposed
     useEffect(() => {
         if (turnCount !== 1) {
@@ -541,6 +523,38 @@ export default function PvAI() {
         repetition.player.moves,
     ])
 
+    useEffect(() => {
+        const invertal = setInterval(() => {
+            setChronometer((prevChronometer) => prevChronometer + 1)
+        }, 1000)
+
+        return () => clearInterval(invertal)
+    }, [])
+
+    // Method - Reset the game
+    const resetBoard = () => {
+        setBoard(initialBoard)
+        setChronometer(0)
+        setTurn(true)
+        setTurnCount(1)
+        setCoronation(null)
+        setWinner(null)
+        setTie(null)
+        setSelected(null)
+        setValidMoves([])
+        setExposed(null)
+        setRepetition({
+            ai: { piece: null, moves: [] },
+            player: { piece: null, moves: [] },
+        })
+
+        const element = playerKingRef.current
+        if (element) {
+            element.style.border = ''
+            element.style.backgroundColor = ''
+        }
+    }
+
     // useEffect(() => {
     //     console.log(repetition)
     // }, [repetition])
@@ -568,6 +582,32 @@ export default function PvAI() {
 
     return (
         <div className={style.wrapper}>
+            <div className={style.header}>
+                <div className={style.playerPieces}>
+                    <div>
+                        <FontAwesomeIcon
+                            icon={faChessPawn}
+                            style={{ height: 20 }}
+                        />
+                        <span>{countRemainingPieces(board, false)}</span>
+                    </div>
+                    <span>AI</span>
+                </div>
+                <div className={style.chronometer}>
+                    <span>{formatTime(chronometer)}</span>
+                    <span>CHRONOMETER</span>
+                </div>
+                <div className={style.playerPieces}>
+                    <div>
+                        <FontAwesomeIcon
+                            icon={faChessPawn}
+                            style={{ height: 20 }}
+                        />
+                        <span>{countRemainingPieces(board, true)}</span>
+                    </div>
+                    <span>PLAYER</span>
+                </div>
+            </div>
             <div className={style.board}>
                 {Object.keys(board).map((col) => (
                     <div key={col} className={style.col}>
