@@ -140,13 +140,13 @@ export interface Board {
 }
 
 // Modified board to check for certain conditions
-// export const modifiedBoard: Board = {
-//     a: [null, null, null, null, null, null, null, players.black.king],
-//     b: [null, null, null, null, players.white.knight1, null, null, null],
-//     c: [null, null, null, null, null, null, null, players.white.king],
-//     d: [null, null, null, null, null, null, null, null],
-//     e: [null, null, null, null, null, null, null, null],
-//     f: [null, null, null, null, null, null, null, null],
-//     g: [null, null, null, null, null, null, null, null],
-//     h: [null, null, null, null, null, null, null, null],
-// }
+export const modifiedBoard: Board = {
+    a: [null, null, null, null, null, null, null, players.black.king],
+    b: [null, null, null, null, players.white.Rook1, null, null, null],
+    c: [null, null, null, null, null, null, null, players.white.king],
+    d: [null, null, null, null, null, null, players.white.pawn1, null],
+    e: [null, null, null, null, null, null, null, null],
+    f: [null, null, null, null, null, null, null, null],
+    g: [null, null, null, null, null, null, null, null],
+    h: [null, players.black.pawn1, null, null, null, null, null, null],
+}

@@ -397,6 +397,10 @@ export class PlayerAI {
             piece: ChessPieceType,
             move: string,
             player: boolean
+        ) => void,
+        toCrown: (
+            piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook',
+            selected: SelectedPiece | null
         ) => void
     ) => {
         if (ranking.length) {
@@ -457,13 +461,16 @@ export class PlayerAI {
 
                 return newBoard
             })
+
+            // Coronation
+            if (idx === 0 && bestRanked.selected.piece.name === 'Pawn')
+                toCrown('Queen', { piece: bestRanked.selected.piece, col, idx })
         }
     }
 
     // Perform a random move
     randomAction = (
         board: Board,
-        coronation: SelectedPiece | null,
         repetition: { ai: repetition; player: repetition },
         exposed: null | {
             king: SelectedPiece
@@ -471,7 +478,10 @@ export class PlayerAI {
         },
         setBoard: React.Dispatch<React.SetStateAction<Board>>,
         setTurnCount: React.Dispatch<React.SetStateAction<number>>,
-        toCrown: (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => void,
+        toCrown: (
+            piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook',
+            selected: SelectedPiece | null
+        ) => void,
         addRepetition: (
             piece: ChessPieceType,
             move: string,
@@ -619,16 +629,19 @@ export class PlayerAI {
                 }
             } else {
                 // Make the best move
-                this.#move(board, repetition, ranking, setBoard, addRepetition)
+                this.#move(
+                    board,
+                    repetition,
+                    ranking,
+                    setBoard,
+                    addRepetition,
+                    toCrown
+                )
             }
         }
 
         moveAction()
 
         setTurnCount((prevTurnCount) => prevTurnCount + 1)
-
-        if (coronation && !coronation.piece.player) {
-            toCrown('Queen')
-        }
     }
 }

@@ -1,7 +1,7 @@
 import style from './App.module.css'
 
 import { useEffect, useRef, useState } from 'react'
-import { Board, columns, initialBoard } from './constants/board'
+import { Board, columns, initialBoard, modifiedBoard } from './constants/board'
 import { PlayerAI, SelectedPiece } from './classes/AI'
 import {
     deepCopy,
@@ -52,12 +52,12 @@ export default function PvAI() {
         player: { piece: null, moves: [] },
     } as { ai: repetition; player: repetition })
     // State that represents the current board state, initially set to "initialBoard"
-    const [board, setBoard] = useState(initialBoard as Board)
+    const [board, setBoard] = useState(modifiedBoard as Board)
     // State that determines if is the player turn (true) or AI turn (false)
     const [turn, setTurn] = useState(true)
     // Counter that determines the current number of turns
     const [turnCount, setTurnCount] = useState(1)
-    // State that stores a pawn available for coronation
+    // State that stores a player pawn available for coronation
     const [coronation, setCoronation] = useState(null as null | SelectedPiece)
     // State that determines if player (true) or AI (false) won the game, otherwise it's set to "null"
     const [winner, setWinner] = useState(null as null | boolean)
@@ -269,6 +269,8 @@ export default function PvAI() {
 
                     addRepetition(selected.piece, col + idx, true)
                     setTurnCount((prevTurnCount) => prevTurnCount + 1)
+                    if (idx === 7 && selected.piece.name === 'Pawn')
+                        setCoronation({ piece: selected.piece, col, idx })
                 }
             }
         }
@@ -285,7 +287,6 @@ export default function PvAI() {
             setTimeout(() => {
                 playerAI.randomAction(
                     board,
-                    coronation,
                     repetition,
                     exposed,
                     setBoard,
@@ -297,37 +298,40 @@ export default function PvAI() {
         }
     }
 
-    // Method -Crown a pawn
-    const toCrown = (piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook') => {
-        if (coronation && piece) {
+    // Method - Crown a pawn
+    const toCrown = (
+        piece: 'Queen' | 'Bishop' | 'Knight' | 'Rook',
+        selected: SelectedPiece | null = coronation
+    ) => {
+        if (selected && piece) {
             let newPiece: null | ChessPieceType = null
 
             switch (piece) {
                 case 'Queen':
                     newPiece = new Queen(
-                        coronation.piece.player,
-                        coronation.piece.id
+                        selected.piece.player,
+                        selected.piece.id
                     )
                     break
 
                 case 'Bishop':
                     newPiece = new Bishop(
-                        coronation.piece.player,
-                        coronation.piece.id
+                        selected.piece.player,
+                        selected.piece.id
                     )
                     break
 
                 case 'Knight':
                     newPiece = new Knight(
-                        coronation.piece.player,
-                        coronation.piece.id
+                        selected.piece.player,
+                        selected.piece.id
                     )
                     break
 
                 case 'Rook':
                     newPiece = new Rook(
-                        coronation.piece.player,
-                        coronation.piece.id
+                        selected.piece.player,
+                        selected.piece.id
                     )
                     break
 
@@ -339,8 +343,8 @@ export default function PvAI() {
                 setBoard((prevBoard) => {
                     const newBoard = deepCopy(prevBoard)
 
-                    newBoard[coronation.col] = [...prevBoard[coronation.col]]
-                    newBoard[coronation.col][coronation.idx] =
+                    newBoard[selected.col] = [...prevBoard[selected.col]]
+                    newBoard[selected.col][selected.idx] =
                         newPiece as ChessPieceType
 
                     return newBoard
@@ -404,7 +408,7 @@ export default function PvAI() {
 
     // Change turn and reset valid moves, selected and exposed
     useEffect(() => {
-        if (turnCount !== 1) {
+        if (turnCount !== 1 && !coronation) {
             setTurn((prevTurn) => !prevTurn)
 
             setValidMoves([])
@@ -450,38 +454,6 @@ export default function PvAI() {
             if (!exposed.safes.length) setWinner(!exposed.king.piece.player)
     }, [exposed])
 
-    // Detect a pawn available for coronation
-    useEffect(() => {
-        for (const col of columns) {
-            for (let idx = 0; idx < board[col].length; idx++) {
-                const current = board[col][idx]
-                if (
-                    current &&
-                    current.player &&
-                    idx === 7 &&
-                    current.name === 'Pawn'
-                ) {
-                    setCoronation({ col, idx, piece: current })
-                }
-            }
-        }
-
-        for (const col of columns) {
-            for (let idx = 0; idx < board[col].length; idx++) {
-                const current = board[col][idx]
-                if (
-                    current &&
-                    !current.player &&
-                    idx === 0 &&
-                    current.name === 'Pawn'
-                ) {
-                    setCoronation({ col, idx, piece: current })
-                }
-            }
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [turn])
-
     // Detect ties due to repetitions
     useEffect(() => {
         const counters: { [key: string]: { player: boolean; ct: number } } = {}
@@ -523,6 +495,7 @@ export default function PvAI() {
         repetition.player.moves,
     ])
 
+    // Initialize the chronometer
     useEffect(() => {
         const invertal = setInterval(() => {
             setChronometer((prevChronometer) => prevChronometer + 1)
