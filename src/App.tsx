@@ -1,7 +1,7 @@
 import style from './App.module.css'
 
 import { useEffect, useRef, useState } from 'react'
-import { Board, columns, initialBoard, modifiedBoard } from './constants/board'
+import { Board, columns, initialBoard } from './constants/board'
 import { PlayerAI, SelectedPiece } from './classes/AI'
 import {
     deepCopy,
@@ -52,7 +52,7 @@ export default function PvAI() {
         player: { piece: null, moves: [] },
     } as { ai: repetition; player: repetition })
     // State that represents the current board state, initially set to "initialBoard"
-    const [board, setBoard] = useState(modifiedBoard as Board)
+    const [board, setBoard] = useState(initialBoard as Board)
     // State that determines if is the player turn (true) or AI turn (false)
     const [turn, setTurn] = useState(true)
     // Counter that determines the current number of turns
